@@ -5,116 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ဘုရားဝတ်တက် စစ်ဆေးရန်</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Pyidaungsu&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Padauk', sans-serif;
-        }
-        /* Custom class for responsive grid */
-        .grid-cols-16 {
-            grid-template-columns: repeat(16, minmax(0, 1fr));
-        }
-        @media (max-width: 1280px) {
-            .grid-cols-16 {
-                grid-template-columns: repeat(8, minmax(0, 1fr));
-            }
-        }
-        @media (max-width: 640px) {
-            .grid-cols-16 {
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-        }
-        
-        /* Tooltip styles */
-        #seat-tooltip {
-            pointer-events: none;
-            white-space: pre-wrap;
-            transition: opacity 0.2s;
-        }
-
-        /* Seat status styles */
-        .seat.absent {
-            background-color: #fee2e2 !important; /* red-100 */
-            color: #991b1b !important; /* red-800 */
-            border-color: #fecaca !important; /* red-200 */
-            transform: scale(1.05);
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
-        }
-        .seat.on-leave {
-            background-color: #fef9c3 !important; /* yellow-100 */
-            color: #854d0e !important; /* yellow-800 */
-            border-color: #fef08a !important; /* yellow-200 */
-            transform: scale(1.05);
-            box-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
-        }
-        .seat.empty {
-            background-color: #f3f4f6;
-            border: 1px dashed #d1d5db;
-        }
+        body { font-family: 'Pyidaungsu', sans-serif; }
+        .grid-container { display: grid; gap: 0.5rem; }
+        #seat-tooltip { pointer-events: none; white-space: pre-wrap; transition: opacity 0.2s; }
+        .seat.absent { border: 3px solid #ef4444 !important; transform: scale(1.05 ); box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+        .seat.on-leave { border: 3px solid #eab308 !important; transform: scale(1.05); box-shadow: 0 0 8px rgba(234, 179, 8, 0.5); }
+        .seat.empty { background-color: #f3f4f6; border: 1px dashed #d1d5db; }
+        .seat.left { background-color: #e5e7eb !important; color: #6b7280 !important; border-color: #d1d5db !important; cursor: not-allowed !important; }
+        .list-container { min-height: 100px; transition: height 0.3s ease; }
+        #admin-modal { display: none; }
+        #admin-modal.show { display: flex; }
+        .modal-content { max-height: 80vh; }
+        .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
     </style>
 </head>
 <body class="bg-gray-100 p-4 sm:p-6 md:p-8">
+    <!-- Admin Panel Button -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="admin-panel-button" class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-700 transition">
+            Admin Panel
+        </button>
+    </div>
+
     <div class="max-w-screen-2xl mx-auto bg-white rounded-2xl shadow-lg p-6">
         <header class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား</h1>
             <p class="text-gray-600 mt-1">ခုံများကို နှိပ်၍ တက်ရောက်မှု အခြေအနေ ပြောင်းလဲနိုင်ပါသည်။</p>
-             <p class="text-xs text-gray-500 mt-2">( ပထမကလစ် = ပျက်ကွက် | ဒုတိယကလစ် = ခွင့်ရှိသူ | တတိယကလစ် = တက်ရောက် )</p>
+            <!-- Updated Click Order Text -->
+            <p class="text-xs text-gray-500 mt-2">( ပထမကလစ် = ခွင့်ရှိသူ | ဒုတိယကလစ် = ပျက်ကွက် | တတိယကလစ် = တက်ရောက် )</p>
         </header>
 
         <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Seating Chart Section -->
             <div class="flex-grow">
                 <div class="bg-blue-600 text-white text-center py-2 rounded-t-lg font-bold shadow-md">စာချဆရာတော်များနှင့် ကျမ်းပြီးသံဃာတော်များ</div>
-                <div id="seating-chart-container" class="p-4 bg-gray-50 border rounded-b-lg overflow-x-auto">
-                    <!-- Seating chart will be generated here -->
-                </div>
-                 <div class="mt-4 text-center">
+                <div id="seating-chart-container" class="p-4 bg-gray-50 border rounded-b-lg overflow-x-auto"></div>
+                <div class="mt-4 flex justify-center">
                     <button id="reset-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
                         အားလုံးကိုပြန်လည်သတ်မှတ်ရန်
                     </button>
                 </div>
             </div>
 
-            <!-- Lists Section -->
             <div class="lg:w-1/3 xl:w-1/4 flex-shrink-0 space-y-6">
-                <!-- Absent List Section -->
-                <div class="bg-white p-4 rounded-lg shadow-md border h-full">
+                <div class="bg-white p-4 rounded-lg shadow-md border list-container">
                     <div class="flex justify-between items-start mb-4 border-b pb-2">
-                        <div>
-                            <h2 class="text-xl font-bold text-red-700">ပျက်ကွက်စာရင်း</h2>
-                            <p id="current-date-absent" class="text-sm text-gray-500"></p>
-                        </div>
-                        <button id="copy-absent-button" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md transition-all duration-200 mt-1">
-                            ကူးယူရန်
-                        </button>
+                        <div><h2 class="text-xl font-bold text-red-700">ပျက်ကွက်စာရင်း</h2><p id="current-date-absent" class="text-sm text-gray-500"></p></div>
+                        <button id="copy-absent-button" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md">ကူးယူရန်</button>
                     </div>
-                    <ul id="absent-list" class="space-y-2 text-gray-700">
-                        <!-- Absent student list will be generated here -->
-                    </ul>
+                    <ul id="absent-list" class="space-y-2 text-gray-700"></ul>
                 </div>
-                <!-- On Leave List Section -->
-                <div class="bg-white p-4 rounded-lg shadow-md border h-full">
+                <div class="bg-white p-4 rounded-lg shadow-md border list-container">
                     <div class="flex justify-between items-start mb-4 border-b pb-2">
-                         <div>
-                            <h2 class="text-xl font-bold text-yellow-700">ခွင့်ရှိသူစာရင်း</h2>
-                            <p id="current-date-leave" class="text-sm text-gray-500"></p>
-                        </div>
-                        <button id="copy-leave-button" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md transition-all duration-200 mt-1">
-                            ကူးယူရန်
-                        </button>
+                        <div><h2 class="text-xl font-bold text-yellow-700">ခွင့်ရှိသူစာရင်း</h2><p id="current-date-leave" class="text-sm text-gray-500"></p></div>
+                        <button id="copy-leave-button" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md">ကူးယူရန်</button>
                     </div>
-                    <ul id="on-leave-list" class="space-y-2 text-gray-700">
-                        <!-- On-leave student list will be generated here -->
-                    </ul>
+                    <ul id="on-leave-list" class="space-y-2 text-gray-700"></ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tooltip element -->
     <div id="seat-tooltip" class="hidden absolute p-2 bg-gray-900 text-white text-sm rounded-md shadow-lg z-50"></div>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 items-center justify-center z-40">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl modal-content">
+            <h2 class="text-2xl font-bold mb-4">ကျောင်းသားစာရင်း ပြင်ဆင်ရန်</h2>
+            <div class="overflow-auto border rounded-lg" style="max-height: 60vh;">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">အတန်း</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ခုံ</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">အမည်</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">အဆောင်</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ကျောင်းထွက်</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ဖျက်ရန်</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Admin table rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-6 flex justify-between items-center">
+                <button id="add-row-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">အတန်းသစ်ထည့်ရန်</button>
+                <div>
+                    <button id="download-csv-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">CSV ဒေါင်းလုဒ်လုပ်ရန်</button>
+                    <button id="close-admin-modal" class="ml-4 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded">ပိတ်ရန်</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- DOM Element References ---
@@ -127,105 +111,98 @@
         const tooltip = document.getElementById('seat-tooltip');
         const currentDateAbsentEl = document.getElementById('current-date-absent');
         const currentDateLeaveEl = document.getElementById('current-date-leave');
+        const adminPanelButton = document.getElementById('admin-panel-button');
+        const adminModal = document.getElementById('admin-modal');
+        const closeAdminModalButton = document.getElementById('close-admin-modal');
+        const adminTableBody = document.getElementById('admin-table-body');
+        const addRowButton = document.getElementById('add-row-button');
+        const downloadCsvButton = document.getElementById('download-csv-button');
 
-        // --- Constants ---
-        const TOTAL_ROWS = 15;
-        const SEATS_PER_ROW = 16;
-        
-        // --- Dormitory Color Mapping ---
-        const dormColors = {
-            'လှ': 'bg-sky-100 text-sky-800 border-sky-200',
-            'သိမ်': 'bg-teal-100 text-teal-800 border-teal-200',
-            'ပညာ': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-            'အဘိ': 'bg-purple-100 text-purple-800 border-purple-200',
-            'ရ': 'bg-rose-100 text-rose-800 border-rose-200',
-            'ဋ': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200',
-            'ပ': 'bg-pink-100 text-pink-800 border-pink-200',
-            'ဓံ': 'bg-lime-100 text-lime-800 border-lime-200',
-            'သာ': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-            'ဓရ': 'bg-cyan-100 text-cyan-800 border-cyan-200',
-            'ဝိ': 'bg-orange-100 text-orange-800 border-orange-200',
-            'ရွှေ': 'bg-amber-100 text-amber-800 border-amber-200',
-            'မံ': 'bg-slate-200 text-slate-800 border-slate-300',
-            'လှိုင်': 'bg-green-100 text-green-800 border-green-200',
-            'ကြည်': 'bg-violet-100 text-violet-800 border-violet-200',
-            'default': 'bg-gray-200 text-gray-800 border-gray-300'
-        };
+        // --- Constants & State ---
+        const dormColors = { 'လှ': 'bg-sky-100 text-sky-800 border-sky-200', 'သိမ်': 'bg-teal-100 text-teal-800 border-teal-200', 'ပညာ': 'bg-indigo-100 text-indigo-800 border-indigo-200', 'အဘိ': 'bg-purple-100 text-purple-800 border-purple-200', 'ရ': 'bg-rose-100 text-rose-800 border-rose-200', 'ဋ': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200', 'ပ': 'bg-pink-100 text-pink-800 border-pink-200', 'ဓံ': 'bg-lime-100 text-lime-800 border-lime-200', 'သာ': 'bg-emerald-100 text-emerald-800 border-emerald-200', 'ဓရ': 'bg-cyan-100 text-cyan-800 border-cyan-200', 'ဝိ': 'bg-orange-100 text-orange-800 border-orange-200', 'ရွှေ': 'bg-amber-100 text-amber-800 border-amber-200', 'မံ': 'bg-slate-200 text-slate-800 border-slate-300', 'လှိုင်': 'bg-green-100 text-green-800 border-green-200', 'ကြည်': 'bg-violet-100 text-violet-800 border-violet-200', 'default': 'bg-gray-200 text-gray-800 border-gray-300' };
+        let studentDataByClass = {};
+        let allStudents = [];
 
-        // --- Student Data ---
-        const studentData = {
-            "2-1": "ဦးဇာနိက\n(လှ)", "2-2": "ဦးဝိမလာစာ\nရာ(လှ)", "2-3": "ဦးကုမာရ\n(လှ)", "2-4": "ဦးဝိဝေကာနန္ဒာ(လှ)", "2-5": "ဦးအာဒိစ္စ\n(လှ)", "2-6": "ဦးနာဂသေန\n(လှ)", "2-7": "ဦးကိတ္တိသာရ\n(လှ)", "2-8": "ဦးအာစိဏ္ဏ\n(လှ)", "2-9": "ဦးသဇ္ဇနာ\nလင်္ကာရ(လှ)", "2-10": "ဦးကဝိန္ဒာ\nလင်္ကာရ(လှ)", "2-11": "ဦးပညာသီဟာ\nလင်္ကာရ(လှ)", "2-12": "ဦးဝီရသေဋ္ဌာ\nလင်္ကာရ(လှ)", "2-13": "ဦးပညာဝံသ\n(လှ)", "2-14": "ဦးကောသလ္လ\n(လှ)", "2-15": "ဦးစန္ဒဝံသာ\nလင်္ကာရ(လှ)", "2-16": "ဦးစန္ဒိမာ\nလင်္ကာရ(လှ)",
-            "3-1": "ဦးစုန္ဒာ\nလင်္ကာရ(လှ)", "3-2": "ဦးဝိစိတ္တ\n(လှ)", "3-3": "ဦးဣဒ္ဓိဗလ\n(သိမ်)", "3-4": "ဦးဈာနပါလ\n(သိမ်)", "3-5": "ဦးသုနန္ဒ\n(သိမ်)", "3-6": "ဦးဥတ္တမ\n(ပညာ)", "3-7": "ဦးဇဝန\n(ပညာ)", "3-8": "ဦးပဒုမ\n(ပညာ)", "3-9": "ဦးအာစာရ\n(အဘိ)", "3-10": "ဦးဣစ္ဆိတ\n(အဘိ)", "3-11": "ဦးခေမာစာရ\n(အဘိ)", "3-12": "ဦးတေဇသီရိ\n(အဘိ)", "3-13": "ဦးဝိလာသ\n(ရ)", "3-14": "ဦးပညာစက္က\n(ရ)", "3-15": "ဦးကုမာရ\n(ရ)", "3-16": "ဦးအဂ္ဂဓမ္မ\n(ရ)",
-            "4-1": "ဦးဝိစက္ခဏာ\nလင်္ကာရ(ဋ)", "4-2": "ဦးပညာ\nလောက(ဋ)", "4-3": "ဦးတေဇ\n(ဋ)", "4-4": "ဦးစန္ဒာဝရ\n(ပ)", "4-5": "ဦးဣန္ဒာစာရ\n(ပ)", "4-6": "ဦးဝရဉာဏာ\nလင်္ကာရ(ဓံ)", "4-7": "ဦးနန္ဒဝံသ\n(ဓံ)", "4-8": "ဦးဥတ္တရသာရ\n(သာ)", "4-9": "ဦးဉာဏာ\nလင်္ကာရ(သာ)", "4-10": "ဦးပညာဓဇ\n(သာ)", "4-11": "ဦးပညာနန္ဒ\n(သာ)", "4-12": "ဦးကောဝိဒ\n(သာ)", "4-13": "ဦးနန္ဒိယ\n(ဓရ)", "4-14": "ဦးဇာဂရ\n(ဓရ)", "4-15": "ဦးဥက္ကံသ\n(ဓရ)", "4-16": "ဦးကောမလ\n(ဓရ)",
-            "5-1": "ဦးဓမ္မဓရာ\nလင်္ကာရ(ဓရ)", "5-2": "ဦးပဏ္ဍိစ္စ\n(ဓရ)", "5-3": "ဦးနန္ဒိသေန\n(ဓရ)", "5-4": "ဦးဇဝနာ\nလင်္ကာရ(ဓရ)", "5-5": "ဦးခေမာနန္ဒာ\nလင်္ကာရ(ဓရ)", "5-6": "ဦးအရိယာနန္ဒ\n(ဓရ)", "5-7": "ဦးကဝိန္ဒာ\nလင်္ကာရ(ဓရ)", "5-8": "ဦးပဝရာနန္ဒ\n(ဓရ)", "5-9": "ဦးဉာဏဓဇ\n(ဓရ)", "5-10": "ဦးတိက္ခဉာဏ\n(ဓရ)", "5-11": "ဦးတေဇနိယ\n(ဝိ)", "5-12": "ဦးဇာနေယျာ\nလင်္ကာရ(ဝိ)", "5-13": "ဦးခေမာစာရ\n(ဝိ)", "5-14": "ဦးပညော\nဘာသ(ဝိ)", "5-15": "ဦးပဏ္ဍိစ္စ(က)\n(ဝိ)", "5-16": "ဦးပဏ္ဍိစ္စ(ခ)\n(ဝိ)",
-            "6-1": "ဦးလာဘသိဒ္ဓိ\n(ဝိ)", "6-2": "ဦးဇနကာ\nလင်္ကာရ(ဝိ)", "6-3": "ဦးတေဇဝန္တ\n(ဝိ)", "6-4": "ဦးစန္ဒောဘာသ\n(ရွှေ)", "6-5": "ဦးလာဘသိဒ္ဓိ\n(ရွှေ)", "6-6": "ဦးမုနိန္ဒ\n(ရွှေ)", "6-7": "ဦးသူရိယ\n(ရွှေ)", "6-8": "ဦးမုနိဝရ\n(ရွှေ)", "6-9": "ဦးဝိသုဒ္ဓ\n(ရွှေ)", "6-10": "ဦးစန္ဒိမာ\n(ရွှေ)", "6-11": "ဦးအဂ္ဂဝံသ\n(ရွှေ)", "6-12": "ဦးစန္ဒာဒီပ\n(ရွှေ)", "6-13": "ဦးသုန္ဒရ\n(ရွှေ)", "6-14": "ဦးဇမ္ဗူဒီပဓဇ\n(ရွှေ)", "6-15": "ဦးခတ္တိယ\n(ရွှေ)", "6-16": "ဦးနန္ဒဝံသ\n(ရွှေ)",
-            "7-1": "ဦးဝေပုလ္လ\n(ရွှေ)", "7-2": "ဦးသုတဓရာ\nလင်္ကာရ(ရွှေ)", "7-3": "ဦးသုခမိန္ဒာ\nလင်္ကာရ(ရွှေ)", "7-4": "ဦးဃောသိတာ\nလင်္ကာရ(ရွှေ)", "7-5": "ဦးကဝိဓဇ\n(မံ)", "7-6": "ဦးကုသလ\n(မံ)", "7-7": "ဦးစန္ဒောဘာသ\n(မံ)", "7-8": "ဦးဝီရိယာနန္ဒ\n(မံ)", "7-9": "ဦးမာနိတသီရိ\n(မံ)", "7-10": "ဦးကောဝိဒ\n(မံ)", "7-11": "ဦးဣန္ဒာစာရ\n(မံ)", "7-12": "ဦးဝါသေဋ္ဌ\n(မံ)", "7-13": "ဦးဉာဏဝရ\n(မံ)", "7-14": "ဦးဝိမလ\n(မံ)", "7-15": "ဦးဓမ္မပါလ(မံ)", "7-16": "ဦးရေဝတာ\nလင်္ကာရ(မံ)",
-            "8-1": "ဦးပဏ္ဍိတ\n(မံ)", "8-2": "ဦးကသရိန္ဒာ\nလင်္ကာရ(မံ)", "8-3": "ဦးသုစိတ္တ\nဉာဏ(မံ)", "8-4": "ဦးဝိစိတ္တ\n(မံ)", "8-5": "ဦးပရမ\n(မံ)", "8-6": "ဦးသဒ္ဓမ္မ\nဝံသ(မံ)", "8-7": "ဦးဉာဏိန္ဒ\n(မံ)", "8-8": "ဦးခေမိန္ဒ\n(မံ)", "8-9": "ဦးဉာဏသာရ\n(မံ)", "8-10": "ဦးပညာနန္ဒ\n(မံ)", "8-11": "ဦးဩသဓာ\nလင်္ကာရ(မံ)", "8-12": "ဦးကေလာသ\n(မံ)", "8-13": "ဦးပညာသာရ\n(မံ)", "8-14": "ဦးရေဝတ\n(မံ)", "8-15": "ဦးပညာစာရာ\nလင်္ကာရ(မံ)", "8-16": "ဦးဓမ္မိက\n(လှိုင်)",
-            "9-1": "ဦးအာစာရ\n(လှိုင်)", "9-2": "ဦးပညိဿရ\n(လှိုင်)", "9-3": "ဦးနန္ဒမာလာ\n(လှိုင်)", "9-4": "ဦးအဂ္ဂဝံသ\n(လှိုင်)", "9-5": "ဦးအဂ္ဂသာရ\n(လှိုင်)", "9-6": "ဦးဝါသေဋ္ဌ\n(လှိုင်)", "9-7": "ဦးဝိစိတ္တ\n(လှိုင်)", "9-8": "ဦးကဝိဓဇ\n(လှိုင်)", "9-9": "ဦးဝိနယ\n(လှိုင်)", "9-10": "ဦးခေမိဿရ\n(လှိုင်)", "9-11": "ဦးကေသရ\n(လှိုင်)", "9-12": "ဦးရဋ္ဌပါလ\n(လှိုင်)", "9-13": "ဦးစန္ဒာသီရိ\n(လှိုင်)", "9-14": "ဦးပုညသေဋ္ဌာ\nလင်္ကာရ(လှိုင်)", "9-15": "ဦးပညာလောက(လှိုင်)", "9-16": "ဦးပညာစာရ\n(လှိုင်)",
-            "10-1": "ဦးရာဇဓမ္မ\n(လှိုင်)", "10-2": "ဦးဝိလာသာ\nလင်္ကာရ(လှိုင်)", "10-3": "ဦးကောသလ္လ\n(လှိုင်)", "10-4": "ဦးဇောတိက\n(လှိုင်)", "10-5": "ဦးပညာသီဟ\n(လှိုင်)", "10-6": "ဦးဉာဏသာမိ\n(လှိုင်)", "10-7": "ကျမ်းပြီးကိုရင်", "10-8": "ရှင်သောဘနာ\nလင်္ကာရ(လှ)", "10-9": "ရှင်စန္ဒန\n(လှ)", "10-10": "ရှင်ပဏ္ဍိတ\n(သိမ်)", "10-11": "ရှင်ဝိမလ\n(သိမ်)", "10-12": "ရှင်နန္ဒမာလာ\n(သိမ်)", "10-13": "ရှင်ကဉ္စန\n(သိမ်)", "10-14": "ရှင်ဇဝန\n(အဘိ)", "10-15": "ရှင်ပဏ္ဍိတဝရ\n(အဘိ)", "10-16": "ရှင်ဉာဏသေဋ္ဌ\n(အဘိ)",
-            "11-1": "ရှင်ဝိစာရ\n(အဘိ)", "11-2": "ရှင်အဂ္ဂါနန္ဒ\n(အဘိ)", "11-3": "ရှင်ဆေကာနန္ဒ\n(အဘိ)", "11-4": "ရှင်ပညာဓဇ\n(ရ)", "11-5": "ရှင်အဂ္ဂသီရိ\n(ရ)", "11-6": "ရှင်သာသန\n(ရ)", "11-7": "ရှင်အာစာရ\n(ရ)", "11-8": "ရှင်ဣန္ဒပါလ\n(ရ)", "11-9": "ရှင်ပညာသီရိ\n(ဋ)", "11-10": "ရှင်ကုသလ\n(ဋ)", "11-11": "ရှင်ဥတ္တရ\n(ဋ)", "11-12": "ရှင်ကောဝိဒ\n(ဋ)", "11-13": "ရှင်ဉာဏသာရ\n(ဋ)", "11-14": "ရှင်ဗလသီရိ\n(ဋ)", "11-15": "ရှင်စန္ဒသာရ\n(ဋ)", "11-16": "ရှင်သုဒဿန\n(ဋ)",
-            "12-1": "ရှင်အာစိဏ္ဏ\n(ဋ)", "12-2": "ရှင်ဝိမလ\n(ဋ)", "12-3": "ရှင်ကုဏ္ဍလ\n(ဋ)", "12-4": "ရှင်ဝိလာသ\n(ဋ)", "12-5": "ရှင်ပဏ္ဍဝံသ\n(ဋ)", "12-6": "ရှင်အာစိဏ္ဏ\n(ဋ)", "12-7": "ရှင်ပညာသီရိ\n(ပ)", "12-8": "ရှင်တေဇာနန္ဒ\n(ပ)", "12-9": "ရှင်သီလာစာရ\n(ပ)", "12-10": "ရှင်ဝိလာသ\n(ပ)", "12-11": "ရှင်သောဘန\n(ပ)", "12-12": "ရှင်ဝီရိယ\n(ပ)", "12-13": "ရှင်ဥတ္တမ\n(ပ)", "12-14": "ရှင်အာစာရ\n(ပ)", "12-15": "ရှင်ဉာဏိဿရ (ပ)", "12-16": "ရှင်ဥက္ကံသ\n(ပ)",
-            "13-1": "ရှင်သိက္ခိတာ\nနန္ဒ(ပ)", "13-2": "ရှင်သုစိတ္တ\n(ဓံ)", "13-3": "ရှင်ပညာဒီပ\n(ဓံ)", "13-4": "ရှင်သီဟဓမ္မ\n(ဓံ)", "13-5": "ရှင်သုမနဓဇ\n(ဓံ)", "13-6": "ရှင်ပညာနန္ဒ\n(ဓံ)", "13-7": "ရှင်ပညာဝံသ\n(ဓံ)", "13-8": "ရှင်ပုညာနန္ဒ\n(ဓံ)", "13-9": "ရှင်ဝိလာသ\n(ဓံ)", "13-10": "ရှင်ဓမ္မိဿရ\n(ဓံ)", "13-11": "ရှင်အဂ္ဂဝံသ\n(ဓံ)", "13-12": "ရှင်နန္ဒသာရ\n(ဓံ)", "13-13": "ရှင်ဩဘာသ\n(ဓံ)", "13-14": "ရှင်သုတဓရ\n(သာ)", "13-15": "ရှင်ဥတ္တမ\n(ဓရ)", "13-16": "ရှင်သုနန္ဒ\n(ဓရ)",
-            "14-1": "ရှင်ပညိဿရ\n(ဓရ)", "14-2": "ရှင်ဝရသာမိ\n(ဓရ)", "14-3": "ရှင်ဝိစိတ္တသာရ\n(ဓရ)", "14-4": "ရှင်သံဝရာ\nလင်္ကာရ(ဓရ)", "14-5": "ရှင်ဉာဏိန္ဒ\n(ဓရ)", "14-6": "ရှင်သုစိတ္တ\n(ဓရ)", "14-7": "ရှင်အရိယဝံသ\n(ဓရ)", "14-8": "ရှင်ဓမ္မဝံသ\n(ဓရ)", "14-9": "ရှင်ကုဝေရ\n(ဓရ)", "14-10": "ရှင်မဏ္ဍလ\n(ဓရ)", "14-12": "ရှင်သုမန\n(လှိုင်)", "14-13": "ရှင်ပညိန္ဒ\n(လှိုင်)", "14-14": "ရှင်ဝိစာရ\n(လှိုင်)", "14-15": "ရှင်သုနန္ဒ\n(လှိုင်)", "14-16": "ရှင်စန္ဒကုမာရ\n(လှိုင်)",
-            "15-4": "ရှင်မေဓာဝံသ\n(ကြည်)", "15-5": "ရှင်စန္ဒာဝရ\n(ကြည်)", "15-6": "ရှင်ဝိမလ\n(ကြည်)", "15-7": "ရှင်စန္ဒာဝရ\n(ကြည်)", "15-8": "ရှင်ပညာသာမိ\n(ကြည်)", "15-9": "ရှင်ဥတ္တရ\n(ကြည်)", "15-10": "ရှင်ပိယဓမ္မ\n(ကြည်)", "15-11": "ရှင်ပညာနန္ဒ\n(ကြည်)", "15-12": "ရှင်စန္ဒိမာ\n(ကြည်)",
-        };
+        // --- Data Loading ---
+        async function loadStudentData() {
+            try {
+                const response = await fetch('students.csv?t=' + new Date().getTime()); // Cache busting
+                if (!response.ok) throw new Error('Network response was not ok');
+                const csvText = await response.text();
+                
+                studentDataByClass = {};
+                allStudents = [];
+                const lines = csvText.trim().split('\n');
+                const headers = lines[0].trim().split(',');
+                const dataLines = lines.slice(1);
 
-        // --- Functions ---
-        
-        function getBurmeseDate() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth();
-            const day = today.getDate();
-            const burmeseMonths = ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "ဩဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"];
-            const burmeseNumerals = ["၀", "၁", "၂", "၃", "၄", "၅", "၆", "၇", "၈", "၉"];
-            const toBurmeseNumeral = (num) => String(num).split('').map(digit => burmeseNumerals[parseInt(digit)]).join('');
-            return `${burmeseMonths[month]}လ ${toBurmeseNumeral(day)} ရက်၊ ${toBurmeseNumeral(year)}`;
+                dataLines.forEach(line => {
+                    const values = line.split(',');
+                    const student = {};
+                    headers.forEach((header, i) => {
+                        student[header.trim()] = values[i] ? values[i].trim() : '';
+                    });
+                    
+                    allStudents.push(student);
+
+                    const { Class: classNum, Seat: seatNum, Name: name, Left: isLeft } = student;
+                    if (classNum && seatNum && name) {
+                        if (!studentDataByClass[classNum]) studentDataByClass[classNum] = {};
+                        studentDataByClass[classNum][seatNum] = { ...student, isLeft: isLeft === 'true' };
+                    }
+                });
+                createSeatingChart();
+                updateAllLists();
+            } catch (error) {
+                console.error('Error loading CSV:', error);
+                seatingChartContainer.innerHTML = '<p class="text-red-500 text-center">ကျောင်းသားစာရင်းဖိုင် (CSV) ကို ဖတ်ရာတွင် အမှားအယွင်းဖြစ်ပွားပါသည်။</p>';
+            }
         }
 
+        // --- UI Generation ---
         function createSeatingChart() {
             seatingChartContainer.innerHTML = '';
             seatingChartContainer.classList.add('space-y-4');
+            const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
 
-            for (let row = 1; row <= TOTAL_ROWS; row++) {
-                if (row === 1) continue;
+            for (const classNum of sortedClasses) {
+                const classData = studentDataByClass[classNum];
+                const seatNumbersInClass = Object.keys(classData).map(Number);
+                const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 0;
 
                 const rowContainer = document.createElement('div');
-                const rowLabel = document.createElement('div');
-                rowLabel.classList.add('font-bold', 'text-gray-700', 'mb-2', 'text-lg');
-                rowLabel.textContent = `အတန်း - ${row}`;
-                rowContainer.appendChild(rowLabel);
-
+                rowContainer.innerHTML = `<div class="font-bold text-gray-700 mb-2 text-lg">အတန်း - ${classNum}</div>`;
                 const rowGrid = document.createElement('div');
-                rowGrid.classList.add('grid', 'grid-cols-16', 'gap-2');
+                rowGrid.className = 'grid-container';
+                rowGrid.style.gridTemplateColumns = `repeat(${maxSeatsInThisRow > 0 ? maxSeatsInThisRow : 16}, minmax(0, 1fr))`;
 
-                for (let seat = 1; seat <= SEATS_PER_ROW; seat++) {
-                    const key = `${row}-${seat}`;
-                    const studentName = studentData[key] || '';
+                for (let seatNum = 1; seatNum <= maxSeatsInThisRow; seatNum++) {
+                    const student = classData[seatNum];
                     const seatElement = document.createElement('div');
-                    
-                    seatElement.classList.add('seat', 'h-24', 'flex', 'flex-col', 'items-center', 'justify-center', 'rounded-md', 'p-1', 'transition-all', 'duration-200', 'ease-in-out', 'text-center', 'border');
-                    seatElement.dataset.row = row;
-                    seatElement.dataset.seat = seat;
-                    
-                    if (studentName) {
-                        const displayName = studentName.split('\n')[0];
-                        const dormMatch = studentName.match(/\((.*?)\)/);
-                        const dormName = dormMatch ? dormMatch[1] : null;
-                        const dormText = dormName ? `(${dormName})` : '';
-                        
-                        const colorClasses = (dormName ? (dormColors[dormName] || dormColors.default) : dormColors.default).split(' ');
-                        
-                        seatElement.innerHTML = `<span class="font-bold text-sm">${seat}</span><span class="text-[10px] leading-tight mt-1">${displayName}</span><span class="text-[9px] leading-tight text-gray-500 mt-1">${dormText}</span>`;
-                        seatElement.classList.add(...colorClasses, 'cursor-pointer', 'transform', 'hover:scale-110');
-                        seatElement.dataset.name = studentName;
-                        seatElement.addEventListener('click', cycleAttendanceState);
-                        seatElement.addEventListener('mouseover', showTooltip);
-                        seatElement.addEventListener('mouseout', hideTooltip);
-                        seatElement.addEventListener('mousemove', moveTooltip);
+                    seatElement.className = 'seat h-24 flex flex-col items-center justify-center rounded-md p-1 transition-all duration-200 ease-in-out text-center border';
+                    seatElement.dataset.classNum = classNum;
+                    seatElement.dataset.seatNum = seatNum;
+
+                    if (student && student.Name) {
+                        const colorClasses = (dormColors[student.School] || dormColors.default).split(' ');
+                        const studentInfo = student.School ? `${student.Name} (${student.School})` : student.Name;
+                        seatElement.innerHTML = `<span class="font-bold text-sm">${seatNum}</span><span class="text-[10px] leading-tight mt-1">${studentInfo}</span>`;
+                        seatElement.classList.add(...colorClasses);
+                        seatElement.dataset.name = studentInfo;
+
+                        if (student.isLeft) {
+                            seatElement.classList.add('left');
+                            seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`;
+                        } else {
+                            seatElement.classList.add('cursor-pointer', 'transform', 'hover:scale-110');
+                            seatElement.addEventListener('click', cycleAttendanceState);
+                            seatElement.addEventListener('mouseover', showTooltip);
+                            seatElement.addEventListener('mouseout', hideTooltip);
+                            seatElement.addEventListener('mousemove', moveTooltip);
+                        }
                     } else {
                         seatElement.classList.add('empty');
-                        seatElement.innerHTML = `<span class="font-bold text-sm">${seat}</span>`;
+                        seatElement.innerHTML = `<span class="font-bold text-sm text-gray-400">${seatNum}</span>`;
                     }
                     rowGrid.appendChild(seatElement);
                 }
@@ -234,136 +211,61 @@
             }
         }
 
+        // --- Attendance & List Management ---
+        
+        /**
+         * MODIFIED: Swapped the click order.
+         * 1st Click -> On Leave (ခွင့်)
+         * 2nd Click -> Absent (ပျက်ကွက်)
+         * 3rd Click -> Present (ပြန်ရောက်)
+         */
         function cycleAttendanceState(event) {
             const seat = event.currentTarget;
-            if (seat.classList.contains('absent')) {
-                seat.classList.remove('absent');
-                seat.classList.add('on-leave');
-            } else if (seat.classList.contains('on-leave')) {
+            if (seat.classList.contains('on-leave')) {
+                // Currently on-leave, switch to absent
                 seat.classList.remove('on-leave');
-            } else {
                 seat.classList.add('absent');
-            }
-            updateAllLists();
-        }
-
-        function updateAllLists() {
-            updateList('absent', absentList, copyAbsentButton);
-            updateList('on-leave', onLeaveList, copyLeaveButton);
-        }
-
-        function updateList(state, listElement, buttonElement) {
-            listElement.innerHTML = '';
-            const seats = document.querySelectorAll(`.seat.${state}`);
-            
-            const stateMessages = {
-                'absent': 'ပျက်ကွက်သူ မရှိပါ။',
-                'on-leave': 'ခွင့်ရှိသူ မရှိပါ။'
-            };
-            const itemColors = {
-                'absent': 'bg-red-50 text-red-800',
-                'on-leave': 'bg-yellow-50 text-yellow-800'
-            };
-
-            if (seats.length === 0) {
-                listElement.innerHTML = `<li class="text-gray-500">${stateMessages[state]}</li>`;
-                buttonElement.disabled = true;
-                buttonElement.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (seat.classList.contains('absent')) {
+                // Currently absent, switch to present (remove all)
+                seat.classList.remove('absent');
             } else {
-                buttonElement.disabled = false;
-                buttonElement.classList.remove('opacity-50', 'cursor-not-allowed');
-                seats.forEach(seat => {
-                    const listItem = document.createElement('li');
-                    listItem.className = `p-2 rounded-md text-sm ${itemColors[state]}`;
-                    const row = seat.dataset.row;
-                    const seatNum = seat.dataset.seat;
-                    const studentName = (seat.dataset.name || '').replace(/\n/g, ' ');
-                    listItem.textContent = `အတန်း ${row}၊ ခုံ ${seatNum}: ${studentName}`;
-                    listElement.appendChild(listItem);
-                });
+                // Currently present, switch to on-leave
+                seat.classList.add('on-leave');
             }
-        }
-        
-        function resetAllSeats() {
-            const allSeats = document.querySelectorAll('.seat');
-            allSeats.forEach(seat => {
-                if(seat.dataset.name) {
-                    seat.classList.remove('absent', 'on-leave');
-                }
-            });
             updateAllLists();
         }
 
-        function copyList(state, buttonElement) {
-            const seats = document.querySelectorAll(`.seat.${state}`);
-            if (seats.length === 0) return;
+        function updateAllLists() { updateList('absent', absentList, copyAbsentButton); updateList('on-leave', onLeaveList, copyLeaveButton); }
+        function updateList(state, listElement, buttonElement) { listElement.innerHTML = ''; const seats = document.querySelectorAll(`.seat.${state}`); const stateMessages = { 'absent': 'ပျက်ကွက်သူ မရှိပါ။', 'on-leave': 'ခွင့်ရှိသူ မရှိပါ။' }; const itemColors = { 'absent': 'bg-red-50 text-red-800', 'on-leave': 'bg-yellow-50 text-yellow-800' }; if (seats.length === 0) { listElement.innerHTML = `<li class="text-gray-500">${stateMessages[state]}</li>`; buttonElement.disabled = true; buttonElement.classList.add('opacity-50', 'cursor-not-allowed'); } else { buttonElement.disabled = false; buttonElement.classList.remove('opacity-50', 'cursor-not-allowed'); const sortedSeats = Array.from(seats).sort((a, b) => { const classA = parseInt(a.dataset.classNum, 10); const seatA = parseInt(a.dataset.seatNum, 10); const classB = parseInt(b.dataset.classNum, 10); const seatB = parseInt(b.dataset.seatNum, 10); if (classA !== classB) return classA - classB; return seatA - seatB; }); sortedSeats.forEach(seat => { const listItem = document.createElement('li'); listItem.className = `p-2 rounded-md text-sm ${itemColors[state]}`; listItem.textContent = `အတန်း ${seat.dataset.classNum}၊ ခုံ ${seat.dataset.seatNum}: ${seat.dataset.name || ''}`; listElement.appendChild(listItem); }); } }
+        function resetAllSeats() { document.querySelectorAll('.seat:not(.left)').forEach(seat => seat.classList.remove('absent', 'on-leave')); updateAllLists(); }
+        function copyList(state, buttonElement) { const listItems = state === 'absent' ? absentList.querySelectorAll('li') : onLeaveList.querySelectorAll('li'); if (listItems.length === 0 || (listItems.length === 1 && listItems[0].classList.contains('text-gray-500'))) return; const dateString = getBurmeseDate(); const title = state === 'absent' ? 'ဘုရားဝတ်တက် ပျက်ကွက်စာရင်း' : 'ဘုရားဝတ်တက် ခွင့်ရှိသူစာရင်း'; let listText = `${title}\n(${dateString})\n\n`; listItems.forEach(item => { listText += `${item.textContent}\n`; }); navigator.clipboard.writeText(listText.trim()).catch(err => console.error('Failed to copy: ', err)); }
+        function showTooltip(event) { const seat = event.currentTarget; if (seat.dataset.name) { tooltip.textContent = seat.dataset.name; tooltip.classList.remove('hidden'); } }
+        function hideTooltip() { tooltip.classList.add('hidden'); }
+        function moveTooltip(event) { tooltip.style.left = `${event.pageX + 15}px`; tooltip.style.top = `${event.pageY + 15}px`; }
+        function getBurmeseDate() { const today = new Date(); const year = today.getFullYear(); const month = today.getMonth(); const day = today.getDate(); const burmeseMonths = ["ဇန်နဝါရီ", "ဖေဖော်ဝါရီ", "မတ်", "ဧပြီ", "မေ", "ဇွန်", "ဇူလိုင်", "ဩဂုတ်", "စက်တင်ဘာ", "အောက်တိုဘာ", "နိုဝင်ဘာ", "ဒီဇင်ဘာ"]; const burmeseNumerals = ["၀", "၁", "၂", "၃", "၄", "၅", "၆", "၇", "၈", "၉"]; const toBurmeseNumeral = (num) => String(num).split('').map(digit => burmeseNumerals[parseInt(digit)]).join(''); return `${burmeseMonths[month]}လ ${toBurmeseNumeral(day)} ရက်၊ ${toBurmeseNumeral(year)}`; }
 
-            const dateString = getBurmeseDate();
-            const title = state === 'absent' ? 'ပျက်ကွက်စာရင်း' : 'ခွင့်ရှိသူစာရင်း';
-            
-            let listText = `${title} (${dateString}):\n\n`;
-            seats.forEach(seat => {
-                const row = seat.dataset.row;
-                const seatNum = seat.dataset.seat;
-                const studentName = (seat.dataset.name || '').replace(/\n/g, ' ');
-                listText += `အတန်း ${row}၊ ခုံ ${seatNum}: ${studentName}\n`;
-            });
-
-            const textArea = document.createElement("textarea");
-            textArea.value = listText.trim();
-            textArea.style.position = "fixed";
-            textArea.style.left = "-9999px";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                document.execCommand('copy');
-                const originalText = buttonElement.textContent;
-                const originalClasses = buttonElement.className;
-                buttonElement.textContent = 'ကူးယူပြီးပါပြီ!';
-                buttonElement.className = buttonElement.className.replace(/bg-(red|yellow)-500\shover:bg-(red|yellow)-600/, 'bg-blue-500');
-                
-                setTimeout(() => {
-                    buttonElement.textContent = originalText;
-                    buttonElement.className = originalClasses;
-                }, 2000);
-            } catch (err) {
-                console.error('ကူးယူရာတွင် အမှားအယွင်းဖြစ်ပွားသည်: ', err);
-            }
-
-            document.body.removeChild(textArea);
-        }
-
-        function showTooltip(event) {
-            const seat = event.currentTarget;
-            const studentName = seat.dataset.name;
-            if (studentName) {
-                tooltip.textContent = studentName;
-                tooltip.classList.remove('hidden');
-            }
-        }
-
-        function hideTooltip() {
-            tooltip.classList.add('hidden');
-        }
-
-        function moveTooltip(event) {
-            tooltip.style.left = `${event.pageX + 15}px`;
-            tooltip.style.top = `${event.pageY + 15}px`;
-        }
+        // --- Admin Panel Logic ---
+        function openAdminPanel() { populateAdminTable(); adminModal.classList.add('show'); }
+        function closeAdminPanel() { adminModal.classList.remove('show'); }
+        function populateAdminTable() { adminTableBody.innerHTML = ''; allStudents.sort((a, b) => { const classA = parseInt(a.Class, 10); const seatA = parseInt(a.Seat, 10); const classB = parseInt(b.Class, 10); const seatB = parseInt(b.Seat, 10); if (classA !== classB) return classA - classB; return seatA - seatB; }).forEach((student, index) => { const row = createAdminTableRow(student, index); adminTableBody.appendChild(row); }); }
+        function createAdminTableRow(student, index) { const row = document.createElement('tr'); row.dataset.index = index; row.innerHTML = ` <td class="px-4 py-2"><input type="text" value="${student.Class || ''}" class="table-input" data-field="Class"></td> <td class="px-4 py-2"><input type="text" value="${student.Seat || ''}" class="table-input" data-field="Seat"></td> <td class="px-4 py-2"><input type="text" value="${student.Name || ''}" class="table-input" data-field="Name"></td> <td class="px-4 py-2"><input type="text" value="${student.School || ''}" class="table-input" data-field="School"></td> <td class="px-4 py-2 text-center"><input type="checkbox" ${student.Left === 'true' ? 'checked' : ''} class="h-5 w-5" data-field="Left"></td> <td class="px-4 py-2 text-center"><button class="text-red-500 hover:text-red-700 delete-row-button">ဖျက်ရန်</button></td> `; row.querySelector('.delete-row-button').addEventListener('click', () => { row.remove(); }); return row; }
+        addRowButton.addEventListener('click', () => { const newStudent = { Class: '', Seat: '', Name: '', School: '', Left: 'false' }; const newIndex = adminTableBody.rows.length; const row = createAdminTableRow(newStudent, newIndex); adminTableBody.appendChild(row); });
+        downloadCsvButton.addEventListener('click', () => { const headers = ['Class', 'Seat', 'Name', 'School', 'Left']; let csvContent = headers.join(',') + '\n'; const rows = Array.from(adminTableBody.rows); rows.forEach(row => { const classVal = row.querySelector('[data-field="Class"]').value; const seatVal = row.querySelector('[data-field="Seat"]').value; const nameVal = row.querySelector('[data-field="Name"]').value; const schoolVal = row.querySelector('[data-field="School"]').value; const leftVal = row.querySelector('[data-field="Left"]').checked; if (nameVal) { csvContent += `"${classVal}","${seatVal}","${nameVal}","${schoolVal}","${leftVal}"\n`; } }); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "students_updated.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); setTimeout(() => { alert("CSV ဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပြီးပါပြီ။ စာမျက်နှာကို အသစ်ပြန်လည်စတင်ပါမည်။"); closeAdminPanel(); loadStudentData(); }, 500); });
 
         // --- Event Listeners ---
+        adminPanelButton.addEventListener('click', () => { const password = prompt("Admin Password ကိုထည့်ပါ:"); if (password === "Ashin@135") { openAdminPanel(); } else if (password !== null) { alert("Password မှားယွင်းနေပါသည်။"); } });
+        closeAdminModalButton.addEventListener('click', closeAdminPanel);
         resetButton.addEventListener('click', resetAllSeats);
         copyAbsentButton.addEventListener('click', () => copyList('absent', copyAbsentButton));
         copyLeaveButton.addEventListener('click', () => copyList('on-leave', copyLeaveButton));
 
         // --- Initial Load ---
-        createSeatingChart();
-        updateAllLists();
-        const todayDate = getBurmeseDate();
-        currentDateAbsentEl.textContent = todayDate;
-        currentDateLeaveEl.textContent = todayDate;
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudentData();
+            const todayDate = getBurmeseDate();
+            currentDateAbsentEl.textContent = todayDate;
+            currentDateLeaveEl.textContent = todayDate;
+        });
     </script>
 </body>
 </html>
