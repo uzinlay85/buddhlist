@@ -45,37 +45,37 @@
             
             .print-grid {
                 display: grid !important;
-                grid-template-columns: 1fr 1fr; /* 2 columns layout */
-                gap: 5mm;
+                grid-template-columns: 1fr; /* Single column for all classes */
+                gap: 3mm;
             }
 
             .print-column {
                 display: flex !important;
                 flex-direction: column;
-                gap: 3mm;
+                gap: 2mm;
             }
 
             .print-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 3mm;
+                margin-bottom: 2mm;
             }
 
             .print-table td {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 border: 1px solid #ccc !important;
-                height: 8mm; /* Further reduced height */
+                height: 6mm; /* Reduced height */
                 width: 6.25%; /* 100% / 16 columns */
                 padding: 0.5mm;
                 text-align: center;
                 vertical-align: middle;
-                font-size: 5pt; /* Even smaller font */
+                font-size: 4pt; /* Smaller font */
             }
             
-            .print-seat-num { font-size: 5pt; font-weight: bold; }
-            .print-seat-name { font-size: 4pt; line-height: 1.0; }
-            .print-seat-left { font-size: 4pt; font-weight: bold; color: #ef4444; }
+            .print-seat-num { font-size: 4pt; font-weight: bold; }
+            .print-seat-name { font-size: 3pt; line-height: 1.0; }
+            .print-seat-left { font-size: 3pt; font-weight: bold; color: #ef4444; }
         }
     </style>
 </head>
@@ -457,63 +457,10 @@
             printGrid.className = 'print-grid';
 
             const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
-            const midPoint = Math.ceil(sortedClasses.length / 2);
             
-            const column1Classes = sortedClasses.slice(0, midPoint);
-            const column2Classes = sortedClasses.slice(midPoint);
+            // All classes in one column
+            printGrid.appendChild(createColumn(sortedClasses));
 
-            const createColumn = (classKeys) => {
-                const columnDiv = document.createElement('div');
-                columnDiv.className = 'print-column';
-                classKeys.forEach(classNum => {
-                    const classData = studentDataByClass[classNum];
-                    const table = document.createElement('table');
-                    table.className = 'print-table';
-                    
-                    const caption = document.createElement('caption');
-                    caption.textContent = `အတန်း - ${classNum}`;
-                    caption.style.fontWeight = 'bold';
-                    caption.style.fontSize = '8pt';
-                    caption.style.textAlign = 'left';
-                    caption.style.marginBottom = '2mm';
-                    table.appendChild(caption);
-
-                    const tbody = document.createElement('tbody');
-                    const tr = document.createElement('tr');
-
-                    const seatKeys = Object.keys(classData).map(Number).sort((a, b) => a - b);
-                    const maxSeats = Math.max(16, ...seatKeys);
-
-                    for (let seatNum = 1; seatNum <= maxSeats; seatNum++) {
-                        const td = document.createElement('td');
-                        const student = classData[seatNum];
-                        let seatHTML = '';
-                        
-                        if (student && student.Name) {
-                            const colorClass = dormColors[student.School] || dormColors['default'];
-                            td.style.backgroundColor = TailwindColorsHex[colorClass] || '#e5e7eb';
-                            const studentInfo = student.School ? `${student.Name}(${student.School})` : student.Name;
-                            seatHTML = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${studentInfo}</div>`;
-                            if (student.isLeft) {
-                                td.style.backgroundColor = '#e5e7eb'; // Gray for left students
-                                seatHTML += `<div class="print-seat-left">ကျောင်းထွက်</div>`;
-                            }
-                        } else {
-                            td.style.backgroundColor = '#f3f4f6'; // Empty seat color
-                            seatHTML = `<div class="print-seat-num" style="color: #9ca3af;">${seatNum}</div>`;
-                        }
-                        td.innerHTML = seatHTML;
-                        tr.appendChild(td);
-                    }
-                    tbody.appendChild(tr);
-                    table.appendChild(tbody);
-                    columnDiv.appendChild(table);
-                });
-                return columnDiv;
-            };
-            
-            printGrid.appendChild(createColumn(column1Classes));
-            printGrid.appendChild(createColumn(column2Classes));
             printContainer.appendChild(printGrid);
 
             window.print();
