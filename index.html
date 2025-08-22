@@ -13,30 +13,15 @@
         .grid-container {
             display: grid;
             gap: 0.5rem;
-            /* Default for Desktop: 16 columns */
             grid-template-columns: repeat(16, minmax(0, 1fr ));
         }
-
-        /* For Tablets (e.g., screen width < 1024px) */
         @media (max-width: 1024px) {
-            .grid-container {
-                /* 8 columns on tablets */
-                grid-template-columns: repeat(8, minmax(0, 1fr));
-            }
+            .grid-container { grid-template-columns: repeat(8, minmax(0, 1fr)); }
         }
-
-        /* For Mobile Phones (e.g., screen width < 640px) */
         @media (max-width: 640px) {
-            .grid-container {
-                /* 4 columns on mobile */
-                grid-template-columns: repeat(4, minmax(0, 1fr));
-            }
-            .seat .font-bold {
-                font-size: 0.875rem; /* Increase seat number size on mobile */
-            }
-            .seat .leading-tight {
-                font-size: 11px; /* Increase name size on mobile */
-            }
+            .grid-container { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .seat .font-bold { font-size: 0.875rem; }
+            .seat .leading-tight { font-size: 11px; }
         }
 
         #seat-tooltip { pointer-events: none; white-space: pre-wrap; transition: opacity 0.2s; }
@@ -49,25 +34,82 @@
         #admin-modal.show { display: flex; }
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
+
+        /* --- CSS for Printing --- */
+        @media print {
+            /* Hide elements that are not needed for printing */
+            body {
+                padding: 0;
+                margin: 0;
+            }
+            #admin-panel-button, #reset-button, #print-button, .lists-section, #seat-tooltip, #admin-modal {
+                display: none !important;
+            }
+            
+            /* Ensure the main container and chart take up the full width */
+            .main-container, .seating-section {
+                width: 100%;
+                max-width: 100%;
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .seating-chart-container {
+                overflow: visible;
+                border: none;
+            }
+
+            /* Force colors to print */
+            .seat {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                border: 1px solid #ccc !important; /* Add a light border for clarity */
+                box-shadow: none !important;
+                transform: none !important;
+            }
+
+            /* Ensure grid is consistent for printing */
+            .grid-container {
+                grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
+                gap: 4px !important;
+                page-break-inside: avoid;
+            }
+            
+            .row-container {
+                page-break-inside: avoid;
+            }
+
+            .seat {
+                height: 80px; /* Adjust height for better print layout */
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-2 sm:p-6 md:p-8">
     <!-- Admin Panel Button -->
-    <div class="fixed top-4 right-4 z-50">
-        <button id="admin-panel-button" class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-700 transition">
+    <div id="admin-panel-button" class="fixed top-4 right-4 z-50">
+        <button class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-700 transition">
             Admin Panel
         </button>
     </div>
 
-    <div class="max-w-screen-2xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6">
+    <div class="max-w-screen-2xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6 main-container">
         <header class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား</h1>
             <p class="text-gray-600 mt-1 px-2">ခုံများကို နှိပ်၍ တက်ရောက်မှု အခြေအနေ ပြောင်းလဲနိုင်ပါသည်။</p>
             <p class="text-xs text-gray-500 mt-2">( ပထမကလစ် = ခွင့်ရှိသူ | ဒုတိယကလစ် = ပျက်ကွက် | တတိယကလစ် = တက်ရောက် )</p>
+            <!-- Print Button -->
+            <div class="mt-4">
+                <button id="print-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg shadow-md">
+                    🖨️ ဇယားကွက်ကို Print/PDF ထုတ်ရန်
+                </button>
+            </div>
         </header>
 
         <div class="flex flex-col lg:flex-row gap-8">
-            <div class="flex-grow">
+            <div class="flex-grow seating-section">
                 <div class="bg-blue-600 text-white text-center py-2 rounded-t-lg font-bold shadow-md">စာချဆရာတော်များနှင့် ကျမ်းပြီးသံဃာတော်များ</div>
                 <div id="seating-chart-container" class="p-2 sm:p-4 bg-gray-50 border rounded-b-lg overflow-x-auto"></div>
                 <div class="mt-4 flex justify-center">
@@ -77,7 +119,7 @@
                 </div>
             </div>
 
-            <div class="lg:w-1/3 xl:w-1/4 flex-shrink-0 space-y-6 mt-8 lg:mt-0">
+            <div class="lg:w-1/3 xl:w-1/4 flex-shrink-0 space-y-6 mt-8 lg:mt-0 lists-section">
                 <div class="bg-white p-4 rounded-lg shadow-md border list-container">
                     <div class="flex justify-between items-start mb-4 border-b pb-2">
                         <div><h2 class="text-xl font-bold text-red-700">ပျက်ကွက်စာရင်း</h2><p id="current-date-absent" class="text-sm text-gray-500"></p></div>
@@ -138,12 +180,13 @@
         const tooltip = document.getElementById('seat-tooltip');
         const currentDateAbsentEl = document.getElementById('current-date-absent');
         const currentDateLeaveEl = document.getElementById('current-date-leave');
-        const adminPanelButton = document.getElementById('admin-panel-button');
+        const adminPanelButton = document.getElementById('admin-panel-button').querySelector('button');
         const adminModal = document.getElementById('admin-modal');
         const closeAdminModalButton = document.getElementById('close-admin-modal');
         const adminTableBody = document.getElementById('admin-table-body');
         const addRowButton = document.getElementById('add-row-button');
         const downloadCsvButton = document.getElementById('download-csv-button');
+        const printButton = document.getElementById('print-button');
 
         // --- Constants & State ---
         const dormColors = { 'လှ': 'bg-sky-100 text-sky-800 border-sky-200', 'သိမ်': 'bg-teal-100 text-teal-800 border-teal-200', 'ပညာ': 'bg-indigo-100 text-indigo-800 border-indigo-200', 'အဘိ': 'bg-purple-100 text-purple-800 border-purple-200', 'ရ': 'bg-rose-100 text-rose-800 border-rose-200', 'ဋ': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200', 'ပ': 'bg-pink-100 text-pink-800 border-pink-200', 'ဓံ': 'bg-lime-100 text-lime-800 border-lime-200', 'သာ': 'bg-emerald-100 text-emerald-800 border-emerald-200', 'ဓရ': 'bg-cyan-100 text-cyan-800 border-cyan-200', 'ဝိ': 'bg-orange-100 text-orange-800 border-orange-200', 'ရွှေ': 'bg-amber-100 text-amber-800 border-amber-200', 'မံ': 'bg-slate-200 text-slate-800 border-slate-300', 'လှိုင်': 'bg-green-100 text-green-800 border-green-200', 'ကြည်': 'bg-violet-100 text-violet-800 border-violet-200', 'default': 'bg-gray-200 text-gray-800 border-gray-300' };
@@ -151,118 +194,11 @@
         let allStudents = [];
 
         // --- Data Loading & Parsing ---
-        function parseCSV(text) {
-            const lines = text.trim().split('\n');
-            const headers = lines[0].trim().split(',').map(h => h.trim());
-            const rows = [];
-
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue;
-
-                const values = [];
-                let currentVal = '';
-                let inQuotes = false;
-
-                for (let j = 0; j < line.length; j++) {
-                    const char = line[j];
-                    if (char === '"') {
-                        inQuotes = !inQuotes;
-                    } else if (char === ',' && !inQuotes) {
-                        values.push(currentVal);
-                        currentVal = '';
-                    } else {
-                        currentVal += char;
-                    }
-                }
-                values.push(currentVal);
-
-                const row = {};
-                headers.forEach((header, index) => {
-                    row[header] = values[index] || '';
-                });
-                rows.push(row);
-            }
-            return rows;
-        }
-
-        async function loadStudentData() {
-            try {
-                const response = await fetch('students.csv?t=' + new Date().getTime());
-                if (!response.ok) throw new Error('Network response was not ok');
-                const csvText = await response.text();
-                
-                const parsedData = parseCSV(csvText);
-
-                studentDataByClass = {};
-                allStudents = parsedData;
-
-                allStudents.forEach(student => {
-                    const { Class: classNum, Seat: seatNum, Name: name, Left: isLeft } = student;
-                    if (classNum && seatNum && name) {
-                        if (!studentDataByClass[classNum]) studentDataByClass[classNum] = {};
-                        studentDataByClass[classNum][seatNum] = { ...student, isLeft: isLeft === 'true' };
-                    }
-                });
-
-                createSeatingChart();
-                updateAllLists();
-            } catch (error) {
-                console.error('Error loading or parsing CSV:', error);
-                seatingChartContainer.innerHTML = '<p class="text-red-500 text-center">ကျောင်းသားစာရင်းဖိုင် (CSV) ကို ဖတ်ရာတွင် အမှားအယွင်းဖြစ်ပွားပါသည်။</p>';
-            }
-        }
+        function parseCSV(text) { const lines = text.trim().split('\n'); const headers = lines[0].trim().split(',').map(h => h.trim()); const rows = []; for (let i = 1; i < lines.length; i++) { const line = lines[i].trim(); if (!line) continue; const values = []; let currentVal = ''; let inQuotes = false; for (let j = 0; j < line.length; j++) { const char = line[j]; if (char === '"') { inQuotes = !inQuotes; } else if (char === ',' && !inQuotes) { values.push(currentVal); currentVal = ''; } else { currentVal += char; } } values.push(currentVal); const row = {}; headers.forEach((header, index) => { row[header] = values[index] || ''; }); rows.push(row); } return rows; }
+        async function loadStudentData() { try { const response = await fetch('students.csv?t=' + new Date().getTime()); if (!response.ok) throw new Error('Network response was not ok'); const csvText = await response.text(); const parsedData = parseCSV(csvText); studentDataByClass = {}; allStudents = parsedData; allStudents.forEach(student => { const { Class: classNum, Seat: seatNum, Name: name, Left: isLeft } = student; if (classNum && seatNum && name) { if (!studentDataByClass[classNum]) studentDataByClass[classNum] = {}; studentDataByClass[classNum][seatNum] = { ...student, isLeft: isLeft === 'true' }; } }); createSeatingChart(); updateAllLists(); } catch (error) { console.error('Error loading or parsing CSV:', error); seatingChartContainer.innerHTML = '<p class="text-red-500 text-center">ကျောင်းသားစာရင်းဖိုင် (CSV) ကို ဖတ်ရာတွင် အမှားအယွင်းဖြစ်ပွားပါသည်။</p>'; } }
 
         // --- UI Generation ---
-        function createSeatingChart() {
-            seatingChartContainer.innerHTML = '';
-            seatingChartContainer.classList.add('space-y-4');
-            const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
-
-            for (const classNum of sortedClasses) {
-                const classData = studentDataByClass[classNum];
-                const seatNumbersInClass = Object.keys(classData).map(Number);
-                const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 16;
-
-                const rowContainer = document.createElement('div');
-                rowContainer.innerHTML = `<div class="font-bold text-gray-700 mb-2 text-lg">အတန်း - ${classNum}</div>`;
-                const rowGrid = document.createElement('div');
-                rowGrid.className = 'grid-container';
-                
-                for (let seatNum = 1; seatNum <= maxSeatsInThisRow; seatNum++) {
-                    const student = classData[seatNum];
-                    const seatElement = document.createElement('div');
-                    seatElement.className = 'seat h-24 flex flex-col items-center justify-center rounded-md p-1 transition-all duration-200 ease-in-out text-center border';
-                    seatElement.dataset.classNum = classNum;
-                    seatElement.dataset.seatNum = seatNum;
-
-                    if (student && student.Name) {
-                        const colorClasses = (dormColors[student.School] || dormColors.default).split(' ');
-                        const studentInfo = student.School ? `${student.Name} (${student.School})` : student.Name;
-                        seatElement.innerHTML = `<span class="font-bold text-sm">${seatNum}</span><span class="text-[10px] leading-tight mt-1">${studentInfo}</span>`;
-                        seatElement.classList.add(...colorClasses);
-                        seatElement.dataset.name = studentInfo;
-
-                        if (student.isLeft) {
-                            seatElement.classList.add('left');
-                            seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`;
-                        } else {
-                            seatElement.classList.add('cursor-pointer', 'transform', 'hover:scale-110');
-                            seatElement.addEventListener('click', cycleAttendanceState);
-                            seatElement.addEventListener('mouseover', showTooltip);
-                            seatElement.addEventListener('mouseout', hideTooltip);
-                            seatElement.addEventListener('mousemove', moveTooltip);
-                        }
-                    } else {
-                        seatElement.classList.add('empty');
-                        seatElement.innerHTML = `<span class="font-bold text-sm text-gray-400">${seatNum}</span>`;
-                    }
-                    rowGrid.appendChild(seatElement);
-                }
-                rowContainer.appendChild(rowGrid);
-                seatingChartContainer.appendChild(rowContainer);
-            }
-        }
+        function createSeatingChart() { seatingChartContainer.innerHTML = ''; seatingChartContainer.classList.add('space-y-4'); const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b)); for (const classNum of sortedClasses) { const classData = studentDataByClass[classNum]; const seatNumbersInClass = Object.keys(classData).map(Number); const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 16; const rowContainer = document.createElement('div'); rowContainer.className = 'row-container'; rowContainer.innerHTML = `<div class="font-bold text-gray-700 mb-2 text-lg">အတန်း - ${classNum}</div>`; const rowGrid = document.createElement('div'); rowGrid.className = 'grid-container'; for (let seatNum = 1; seatNum <= maxSeatsInThisRow; seatNum++) { const student = classData[seatNum]; const seatElement = document.createElement('div'); seatElement.className = 'seat h-24 flex flex-col items-center justify-center rounded-md p-1 transition-all duration-200 ease-in-out text-center border'; seatElement.dataset.classNum = classNum; seatElement.dataset.seatNum = seatNum; if (student && student.Name) { const colorClasses = (dormColors[student.School] || dormColors.default).split(' '); const studentInfo = student.School ? `${student.Name} (${student.School})` : student.Name; seatElement.innerHTML = `<span class="font-bold text-sm">${seatNum}</span><span class="text-[10px] leading-tight mt-1">${studentInfo}</span>`; seatElement.classList.add(...colorClasses); seatElement.dataset.name = studentInfo; if (student.isLeft) { seatElement.classList.add('left'); seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`; } else { seatElement.classList.add('cursor-pointer', 'transform', 'hover:scale-110'); seatElement.addEventListener('click', cycleAttendanceState); seatElement.addEventListener('mouseover', showTooltip); seatElement.addEventListener('mouseout', hideTooltip); seatElement.addEventListener('mousemove', moveTooltip); } } else { seatElement.classList.add('empty'); seatElement.innerHTML = `<span class="font-bold text-sm text-gray-400">${seatNum}</span>`; } rowGrid.appendChild(seatElement); } rowContainer.appendChild(rowGrid); seatingChartContainer.appendChild(rowContainer); } }
 
         // --- Attendance & List Management ---
         function cycleAttendanceState(event) { const seat = event.currentTarget; if (seat.classList.contains('on-leave')) { seat.classList.remove('on-leave'); seat.classList.add('absent'); } else if (seat.classList.contains('absent')) { seat.classList.remove('absent'); } else { seat.classList.add('on-leave'); } updateAllLists(); }
@@ -289,6 +225,9 @@
         resetButton.addEventListener('click', resetAllSeats);
         copyAbsentButton.addEventListener('click', () => copyList('absent', copyAbsentButton));
         copyLeaveButton.addEventListener('click', () => copyList('on-leave', copyLeaveButton));
+        printButton.addEventListener('click', () => {
+            window.print();
+        });
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
