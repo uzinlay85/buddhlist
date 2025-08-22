@@ -26,10 +26,12 @@
 
         /* --- CSS for Printing (Final Version) --- */
         @media print {
-            /* Hide everything by default */
+            /* Hide everything on the page by default when printing */
             body > * { display: none !important; }
-            /* Only show the print container */
-            #print-container, #print-container * { display: block !important; }
+            /* Only show the generated print container */
+            #print-container, #print-container * {
+                display: block !important;
+            }
 
             #print-container {
                 position: absolute;
@@ -40,7 +42,7 @@
             
             .print-grid {
                 display: grid;
-                grid-template-columns: 1fr 1fr; /* 2 columns */
+                grid-template-columns: 1fr 1fr; /* 2 columns layout */
                 gap: 15px;
             }
 
@@ -82,6 +84,7 @@
     <!-- This div is hidden by default and will be used for printing -->
     <div id="print-container"></div>
 
+    <!-- Main content wrapper -->
     <div id="main-content">
         <!-- Admin Panel Button -->
         <div id="admin-panel-button" class="fixed top-4 right-4 z-50">
@@ -171,7 +174,6 @@
         const printContainer = document.getElementById('print-container');
         const mainContent = document.getElementById('main-content');
         const printButton = document.getElementById('print-button');
-        // ... (other DOM references remain the same)
         const absentList = document.getElementById('absent-list');
         const onLeaveList = document.getElementById('on-leave-list');
         const resetButton = document.getElementById('reset-button');
@@ -188,7 +190,7 @@
         const downloadCsvButton = document.getElementById('download-csv-button');
 
         // --- Constants & State ---
-        const dormColors = { 'လှ': 'bg-sky-100 text-sky-800 border-sky-200', 'သိမ်': 'bg-teal-100 text-teal-800 border-teal-200', 'ပညာ': 'bg-indigo-100 text-indigo-800 border-indigo-200', 'အဘိ': 'bg-purple-100 text-purple-800 border-purple-200', 'ရ': 'bg-rose-100 text-rose-800 border-rose-200', 'ဋ': 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200', 'ပ': 'bg-pink-100 text-pink-800 border-pink-200', 'ဓံ': 'bg-lime-100 text-lime-800 border-lime-200', 'သာ': 'bg-emerald-100 text-emerald-800 border-emerald-200', 'ဓရ': 'bg-cyan-100 text-cyan-800 border-cyan-200', 'ဝိ': 'bg-orange-100 text-orange-800 border-orange-200', 'ရွှေ': 'bg-amber-100 text-amber-800 border-amber-200', 'မံ': 'bg-slate-200 text-slate-800 border-slate-300', 'လှိုင်': 'bg-green-100 text-green-800 border-green-200', 'ကြည်': 'bg-violet-100 text-violet-800 border-violet-200', 'default': 'bg-gray-200 text-gray-800 border-gray-300' };
+        const dormColors = { 'လှ': 'bg-sky-100', 'သိမ်': 'bg-teal-100', 'ပညာ': 'bg-indigo-100', 'အဘိ': 'bg-purple-100', 'ရ': 'bg-rose-100', 'ဋ': 'bg-fuchsia-100', 'ပ': 'bg-pink-100', 'ဓံ': 'bg-lime-100', 'သာ': 'bg-emerald-100', 'ဓရ': 'bg-cyan-100', 'ဝိ': 'bg-orange-100', 'ရွှေ': 'bg-amber-100', 'မံ': 'bg-slate-200', 'လှိုင်': 'bg-green-100', 'ကြည်': 'bg-violet-100', 'default': 'bg-gray-200' };
         let studentDataByClass = {};
         let allStudents = [];
 
@@ -197,7 +199,7 @@
         async function loadStudentData() { try { const response = await fetch('students.csv?t=' + new Date().getTime()); if (!response.ok) throw new Error('Network response was not ok'); const csvText = await response.text(); const parsedData = parseCSV(csvText); studentDataByClass = {}; allStudents = parsedData; allStudents.forEach(student => { const { Class: classNum, Seat: seatNum, Name: name, Left: isLeft } = student; if (classNum && seatNum && name) { if (!studentDataByClass[classNum]) studentDataByClass[classNum] = {}; studentDataByClass[classNum][seatNum] = { ...student, isLeft: isLeft === 'true' }; } }); createSeatingChart(); updateAllLists(); } catch (error) { console.error('Error loading or parsing CSV:', error); seatingChartContainer.innerHTML = '<p class="text-red-500 text-center">ကျောင်းသားစာရင်းဖိုင် (CSV) ကို ဖတ်ရာတွင် အမှားအယွင်းဖြစ်ပွားပါသည်။</p>'; } }
 
         // --- UI Generation ---
-        function createSeatingChart() { seatingChartContainer.innerHTML = ''; seatingChartContainer.classList.add('space-y-4'); const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b)); for (const classNum of sortedClasses) { const classData = studentDataByClass[classNum]; const seatNumbersInClass = Object.keys(classData).map(Number); const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 16; const rowContainer = document.createElement('div'); rowContainer.className = 'row-container'; rowContainer.innerHTML = `<div class="font-bold text-gray-700 mb-2 text-lg">အတန်း - ${classNum}</div>`; const rowGrid = document.createElement('div'); rowGrid.className = 'grid-container'; for (let seatNum = 1; seatNum <= maxSeatsInThisRow; seatNum++) { const student = classData[seatNum]; const seatElement = document.createElement('div'); seatElement.className = 'seat h-24 flex flex-col items-center justify-center rounded-md p-1 transition-all duration-200 ease-in-out text-center border'; seatElement.dataset.classNum = classNum; seatElement.dataset.seatNum = seatNum; if (student && student.Name) { const colorClasses = (dormColors[student.School] || dormColors.default).split(' '); const studentInfo = student.School ? `${student.Name} (${student.School})` : student.Name; seatElement.innerHTML = `<span class="font-bold text-sm">${seatNum}</span><span class="text-[10px] leading-tight mt-1">${studentInfo}</span>`; seatElement.classList.add(...colorClasses); seatElement.dataset.name = studentInfo; if (student.isLeft) { seatElement.classList.add('left'); seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`; } else { seatElement.classList.add('cursor-pointer', 'transform', 'hover:scale-110'); seatElement.addEventListener('click', cycleAttendanceState); seatElement.addEventListener('mouseover', showTooltip); seatElement.addEventListener('mouseout', hideTooltip); seatElement.addEventListener('mousemove', moveTooltip); } } else { seatElement.classList.add('empty'); seatElement.innerHTML = `<span class="font-bold text-sm text-gray-400">${seatNum}</span>`; } rowGrid.appendChild(seatElement); } rowContainer.appendChild(rowGrid); seatingChartContainer.appendChild(rowContainer); } }
+        function createSeatingChart() { seatingChartContainer.innerHTML = ''; seatingChartContainer.classList.add('space-y-4'); const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b)); for (const classNum of sortedClasses) { const classData = studentDataByClass[classNum]; const seatNumbersInClass = Object.keys(classData).map(Number); const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 16; const rowContainer = document.createElement('div'); rowContainer.className = 'row-container'; rowContainer.innerHTML = `<div class="font-bold text-gray-700 mb-2 text-lg">အတန်း - ${classNum}</div>`; const rowGrid = document.createElement('div'); rowGrid.className = 'grid-container'; for (let seatNum = 1; seatNum <= maxSeatsInThisRow; seatNum++) { const student = classData[seatNum]; const seatElement = document.createElement('div'); seatElement.className = 'seat h-24 flex flex-col items-center justify-center rounded-md p-1 transition-all duration-200 ease-in-out text-center border'; seatElement.dataset.classNum = classNum; seatElement.dataset.seatNum = seatNum; if (student && student.Name) { const colorClass = (dormColors[student.School] || dormColors.default); const studentInfo = student.School ? `${student.Name} (${student.School})` : student.Name; seatElement.innerHTML = `<span class="font-bold text-sm">${seatNum}</span><span class="text-[10px] leading-tight mt-1">${studentInfo}</span>`; seatElement.classList.add(colorClass, 'border-gray-200'); seatElement.dataset.name = studentInfo; if (student.isLeft) { seatElement.classList.add('left'); seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`; } else { seatElement.classList.add('cursor-pointer', 'transform', 'hover:scale-110'); seatElement.addEventListener('click', cycleAttendanceState); seatElement.addEventListener('mouseover', showTooltip); seatElement.addEventListener('mouseout', hideTooltip); seatElement.addEventListener('mousemove', moveTooltip); } } else { seatElement.classList.add('empty'); seatElement.innerHTML = `<span class="font-bold text-sm text-gray-400">${seatNum}</span>`; } rowGrid.appendChild(seatElement); } rowContainer.appendChild(rowGrid); seatingChartContainer.appendChild(rowContainer); } }
 
         // --- Attendance & List Management ---
         function cycleAttendanceState(event) { const seat = event.currentTarget; if (seat.classList.contains('on-leave')) { seat.classList.remove('on-leave'); seat.classList.add('absent'); } else if (seat.classList.contains('absent')) { seat.classList.remove('absent'); } else { seat.classList.add('on-leave'); } updateAllLists(); }
@@ -218,7 +220,7 @@
         addRowButton.addEventListener('click', () => { const newStudent = { Class: '', Seat: '', Name: '', School: '', Left: 'false' }; const newIndex = adminTableBody.rows.length; const row = createAdminTableRow(newStudent, newIndex); adminTableBody.appendChild(row); });
         downloadCsvButton.addEventListener('click', () => { const headers = ['Class', 'Seat', 'Name', 'School', 'Left']; let csvContent = headers.join(',') + '\n'; const rows = Array.from(adminTableBody.rows); rows.forEach(row => { const classVal = row.querySelector('[data-field="Class"]').value; const seatVal = row.querySelector('[data-field="Seat"]').value; const nameVal = row.querySelector('[data-field="Name"]').value; const schoolVal = row.querySelector('[data-field="School"]').value; const leftVal = row.querySelector('[data-field="Left"]').checked; if (nameVal || classVal || seatVal) { csvContent += `"${classVal}","${seatVal}","${nameVal}","${schoolVal}","${leftVal}"\n`; } }); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "students_updated.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); setTimeout(() => { alert("CSV ဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပြီးပါပြီ။ စာမျက်နှာကို အသစ်ပြန်လည်စတင်ပါမည်။"); closeAdminPanel(); loadStudentData(); }, 500); });
 
-        // --- NEW: Print Handling Logic ---
+        // --- Print Handling Logic ---
         function handlePrint() {
             printContainer.innerHTML = ''; // Clear previous print content
             const printGrid = document.createElement('div');
@@ -237,7 +239,7 @@
                     const classData = studentDataByClass[classNum];
                     const rowContainer = document.createElement('div');
                     rowContainer.className = 'print-row-container';
-                    rowContainer.innerHTML = `<div style="font-weight: bold; margin-bottom: 4px;">အတန်း - ${classNum}</div>`;
+                    rowContainer.innerHTML = `<div style="font-weight: bold; margin-bottom: 4px; font-size: 10px;">အတန်း - ${classNum}</div>`;
                     
                     const rowGrid = document.createElement('div');
                     rowGrid.className = 'print-grid-container';
@@ -249,20 +251,20 @@
                         const student = classData[seatNum];
                         const seatElement = document.createElement('div');
                         let seatHTML = '';
+                        const colorClass = student ? (dormColors[student.School] || dormColors.default) : 'bg-gray-200';
+                        seatElement.className = `print-seat`;
+                        seatElement.style.backgroundColor = colorClass.startsWith('bg-') ? TailwindColors[colorClass] : '#f3f4f6';
+
                         if (student && student.Name) {
-                            const colorClasses = (dormColors[student.School] || dormColors.default);
-                            const bgColor = colorClasses.split(' ')[0].replace('bg-', 'background-color: #'); // Simplified color extraction
-                            seatElement.className = `print-seat ${colorClasses}`;
-                            const studentInfo = student.School ? `${student.Name} (${student.School})` : student.Name;
+                            const studentInfo = student.School ? `${student.Name}(${student.School})` : student.Name;
                             seatHTML = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${studentInfo}</div>`;
                             if (student.isLeft) {
-                                seatElement.style.backgroundColor = '#e5e7eb';
+                                seatElement.style.backgroundColor = '#e5e7eb'; // Gray for left students
                                 seatHTML += `<div class="print-seat-left">ကျောင်းထွက်</div>`;
                             }
                         } else {
-                            seatElement.className = 'print-seat';
-                            seatElement.style.backgroundColor = '#f3f4f6';
-                            seatHTML = `<div class="print-seat-num">${seatNum}</div>`;
+                            seatElement.style.backgroundColor = '#f3f4f6'; // Empty seat color
+                            seatHTML = `<div class="print-seat-num" style="color: #9ca3af;">${seatNum}</div>`;
                         }
                         seatElement.innerHTML = seatHTML;
                         rowGrid.appendChild(seatElement);
@@ -272,6 +274,9 @@
                 });
                 return columnDiv;
             };
+            
+            // Simplified Tailwind color map for JS
+            const TailwindColors = { 'bg-sky-100': '#e0f2fe', 'bg-teal-100': '#ccfbf1', 'bg-indigo-100': '#e0e7ff', 'bg-purple-100': '#f3e8ff', 'bg-rose-100': '#ffe4e6', 'bg-fuchsia-100': '#fae8ff', 'bg-pink-100': '#fce7f3', 'bg-lime-100': '#ecfccb', 'bg-emerald-100': '#d1fae5', 'bg-cyan-100': '#cffafe', 'bg-orange-100': '#ffedd5', 'bg-amber-100': '#fef3c7', 'bg-slate-200': '#e2e8f0', 'bg-green-100': '#dcfce7', 'bg-violet-100': '#ede9fe', 'bg-gray-200': '#e5e7eb' };
 
             printGrid.appendChild(createColumn(column1Classes));
             printGrid.appendChild(createColumn(column2Classes));
@@ -280,5 +285,21 @@
             window.print();
         }
 
-        // --- Event Listeners ---
-        adminPanelButton.addEventListener('click', () => { const password = prompt("Admin Password ကိုထည့်ပါ:"); if (password === "Ashin@135") {
+        // --- Event Listeners (Corrected) ---
+        adminPanelButton.addEventListener('click', () => { const password = prompt("Admin Password ကိုထည့်ပါ:"); if (password === "Ashin@135") { openAdminPanel(); } else if (password !== null) { alert("Password မှားယွင်းနေပါသည်။"); } });
+        closeAdminModalButton.addEventListener('click', closeAdminPanel);
+        resetButton.addEventListener('click', resetAllSeats);
+        copyAbsentButton.addEventListener('click', () => copyList('absent', copyAbsentButton));
+        copyLeaveButton.addEventListener('click', () => copyList('on-leave', copyLeaveButton));
+        printButton.addEventListener('click', handlePrint); // Use the new print handler
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStudentData();
+            const todayDate = getBurmeseDate();
+            currentDateAbsentEl.textContent = todayDate;
+            currentDateLeaveEl.textContent = todayDate;
+        });
+    </script>
+</body>
+</html>
