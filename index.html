@@ -24,8 +24,12 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- CSS for Printing (Final Table-based Version) --- */
+        /* --- CSS for Printing --- */
         @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
             /* Hide everything on the page by default when printing */
             body > * { display: none !important; }
             /* Only show the generated print container */
@@ -34,45 +38,45 @@
             }
 
             #print-container {
-                position: absolute;
-                top: 0;
-                left: 0;
                 width: 100%;
+                height: auto;
+                overflow: hidden;
             }
             
             .print-grid {
                 display: grid !important;
                 grid-template-columns: 1fr 1fr; /* 2 columns layout */
-                gap: 15px;
+                gap: 10mm;
             }
 
             .print-column {
                 display: flex !important;
                 flex-direction: column;
-                gap: 8px;
+                gap: 5mm;
             }
 
             .print-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 10px;
-                break-inside: avoid;
+                margin-bottom: 5mm;
+                page-break-inside: avoid;
             }
 
             .print-table td {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 border: 1px solid #ccc !important;
-                height: 55px;
+                height: 10mm; /* Reduced height to fit more */
                 width: 6.25%; /* 100% / 16 columns */
-                padding: 1px;
+                padding: 1mm;
                 text-align: center;
                 vertical-align: middle;
+                font-size: 6pt; /* Smaller font to fit */
             }
             
-            .print-seat-num { font-size: 8px; font-weight: bold; }
-            .print-seat-name { font-size: 7px; line-height: 1.1; }
-            .print-seat-left { font-size: 6px; font-weight: bold; color: #ef4444; }
+            .print-seat-num { font-size: 6pt; font-weight: bold; }
+            .print-seat-name { font-size: 5pt; line-height: 1.0; }
+            .print-seat-left { font-size: 5pt; font-weight: bold; color: #ef4444; }
         }
     </style>
 </head>
@@ -375,7 +379,10 @@
             const title = state === 'absent' ? 'ဘုရားဝတ်တက် ပျက်ကွက်စာရင်း' : 'ဘုရားဝတ်တက် ခွင့်ရှိသူစာရင်း'; 
             let listText = `${title}\n(${dateString})\n\n`; 
             listItems.forEach(item => { listText += `${item.textContent}\n`; }); 
-            navigator.clipboard.writeText(listText.trim()).catch(err => console.error('Failed to copy: ', err)); 
+            navigator.clipboard.writeText(listText.trim()).then(() => {
+                buttonElement.textContent = 'ကူးယူပြီး!';
+                setTimeout(() => buttonElement.textContent = 'ကူးယူရန်', 2000);
+            }).catch(err => console.error('Failed to copy: ', err)); 
         }
         function showTooltip(event) { 
             const seat = event.currentTarget; 
@@ -442,9 +449,9 @@
             const title = document.createElement('h1');
             title.textContent = `ဘုရားဝတ်တက် ဇယားကွက် (${dateString})`;
             title.style.textAlign = 'center';
-            title.style.fontSize = '16px';
+            title.style.fontSize = '12pt';
             title.style.fontWeight = 'bold';
-            title.style.marginBottom = '20px';
+            title.style.marginBottom = '5mm';
             printContainer.appendChild(title);
 
             const printGrid = document.createElement('div');
@@ -467,9 +474,9 @@
                     const caption = document.createElement('caption');
                     caption.textContent = `အတန်း - ${classNum}`;
                     caption.style.fontWeight = 'bold';
-                    caption.style.fontSize = '10px';
+                    caption.style.fontSize = '8pt';
                     caption.style.textAlign = 'left';
-                    caption.style.marginBottom = '4px';
+                    caption.style.marginBottom = '2mm';
                     table.appendChild(caption);
 
                     const tbody = document.createElement('tbody');
