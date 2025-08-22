@@ -35,11 +35,11 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- CSS for Printing --- */
+        /* --- CSS for Printing (Using CSS Columns) --- */
         @media print {
             /* Hide elements that are not needed for printing */
             body { padding: 0; margin: 0; }
-            #admin-panel-button, #reset-button, #print-button, .lists-section, #seat-tooltip, #admin-modal, .seating-section > .bg-blue-600 {
+            #admin-panel-button, #reset-button, #print-button, .lists-section, #seat-tooltip, #admin-modal, .seating-section > .bg-blue-600, header {
                 display: none !important;
             }
             
@@ -56,17 +56,17 @@
             .seating-chart-container {
                 overflow: visible;
                 border: none;
-                /* Use Flexbox to arrange class rows side-by-side */
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: flex-start;
-                align-items: flex-start;
-                gap: 1rem; /* Gap between class rows */
+                /* Use CSS Columns to create side-by-side layout */
+                column-count: 2; /* Split content into 2 columns */
+                column-gap: 20px; /* Space between columns */
+                width: 100%;
+                height: auto;
             }
 
             .row-container {
-                page-break-inside: avoid;
-                width: 100%; /* Each class row takes full width within the flex container */
+                break-inside: avoid; /* Prevent a single class row from splitting across columns */
+                padding-bottom: 10px; /* Space between class rows */
+                width: 100%;
             }
 
             /* Force colors to print */
@@ -77,13 +77,13 @@
                 box-shadow: none !important;
                 transform: none !important;
                 /* Adjust size for compact printing */
-                height: 65px; 
-                padding: 2px;
+                height: 60px; 
+                padding: 1px;
             }
             
-            .seat .font-bold { font-size: 9px; }
-            .seat .leading-tight { font-size: 8px; line-height: 1.1; }
-            .seat .text-\[9px\] { font-size: 7px; }
+            .seat .font-bold { font-size: 8px; }
+            .seat .leading-tight { font-size: 7px; line-height: 1.1; }
+            .seat .text-\[9px\] { font-size: 6px; }
 
             /* Ensure grid is consistent for printing */
             .grid-container {
@@ -176,6 +176,7 @@
     </div>
 
     <script>
+        // --- All JavaScript code remains the same ---
         // --- DOM Element References ---
         const seatingChartContainer = document.getElementById('seating-chart-container');
         const absentList = document.getElementById('absent-list');
