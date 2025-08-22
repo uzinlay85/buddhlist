@@ -1,35 +1,3 @@
-အကျဉ်းချုပ်
-သင်ပေးထားတဲ့ HTML/JavaScript ဖိုင်ဟာ “ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား” လို့ခေါ်တဲ့ အပြင်အဆင် UI တစ်ခု ဖြစ်တယ်။  အဓိက လုပ်ဆောင်ချက်တွေက
-
-CSV ဖိုင် (students.csv) ကို ဖတ်ပြီး တန်း‑ခုံ‑ကျောင်းသား အချက်အလက်ကို စီထုတ်
-အဆိုပါ အချက်အလက်အပေါ် အခြေခံပြီး grid‑based seating chart တစ်ခု ဖန်တီး
-တစ်ခုံကို click လုပ်တဲ့အခါ တက်‑ရောက်၊ ပျက်‑ကွက်၊ ခွင့်‑ရှိ အခြေအနေကို လှည့်ပြောင်း (cycle) လုပ်ပြီး အောက်က “ပျက်ကွက်စာရင်း” / “ခွင့်ရှိသူစာရင်း” ကို အလိုအလျောက် update လုပ်
-Admin panel (password protected) မှာ CSV ကို edit / add / delete လုပ်နိုင်ပြီး ပြန် download လုပ်နိုင်
-အဓိက ပြဿနာများ (bugs / readability)
-အပိုင်း	ပြဿနာ	အကျိုးသက်ရောက်မှု
-HTML	<meta charset="-8"> (invalid)	Browser မသိနိုင် → အက္ခရာ encoding အမှား
-< header> / < class= tags မပိတ်ထား၊ < မလိုအပ်	DOM parsing အမှား, layout မထင်မှတ်သလို
-အများအပြား unclosed tags (<div>, <table>, <thead>, …)	အစီအစဉ်ပုံစံ ပျက်ကွက်, CSS/JS selector မလုပ်
-class="fixed top-4 right-4 z" → z မရှိ	Tailwind z-index utility မရှိ → stacking order မမှန်
-CSS	/* --- Responsive Grid System … */ မှာ comment syntax မမှန် (*/ before /*)	CSS parser အမှား, မတည့်သော rule မလုပ်
-position:; (missing value)	Print layout မထင်မှတ်သလို
-grid-template-columns: 1fr 1fr; */ (comment ထဲ)	CSS အပြစ်၊ grid မလုပ်
-JavaScript	document('seating-chart-container') → document.getElementById(...)	runtime error → script မစတင်
-const adminPanelButton document.getElementById... (missing =)	script crash
-for (let i = 1; i < lines; i++) → lines is array, should be lines.length	CSV parsing မလုပ်
-studentDataByClass[classNum; (semicolon)	SyntaxError
-if (student && student.Name) { … seatElement..add('cursor-pointer', …) – typo (..), missing parentheses	UI interaction မလုပ်
-const = document.querySelectorAll… – variable name missing	Crash
-addRowButton.addEventListener('click', () => { … const row = createAdminTableRow(newStudent, new); – new undefined	Add‑row လုပ်လို့မရ
-downloadCsvButton.addEventListener('click', () => { headers = … – missing let/const	Global leakage
-printContainer.innerHTML ''; – missing =	Print လုပ်လို့မရ
-printGrid.appendChild(create(column2Classes)); – function name typo (create vs createColumn)	Print layout ပျက်
-adminPanelButton.addEventListener('click', () => { const password = prompt("Admin Password ကိုထည့်ပါ:"); … }) – password hard‑coded in client side (security risk)	Anyone can view source and see password
-Accessibility / UX	Tooltip pointer-events:none but not hidden on scroll, no ARIA attributes	Screen‑reader မထောက်ပံ့
-Buttons lack type="button" (default submit) – form‑like behavior unpredictable	Unexpected page reloads
-No fallback for browsers without fetch or navigator.clipboard	Feature break
-အဆင့်‑အဆင့် ပြုပြင်ချက်များ
-1️⃣ HTML – အခြေခံ structure ကို သန့်ရှင်းစေ
 <!DOCTYPE html>
 <html lang="my">
 <head>
