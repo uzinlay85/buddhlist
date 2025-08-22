@@ -24,7 +24,7 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- CSS for Printing (Final Version) --- */
+        /* --- CSS for Printing (Final Table-based Version) --- */
         @media print {
             /* Hide everything on the page by default when printing */
             body > * { display: none !important; }
@@ -41,42 +41,38 @@
             }
             
             .print-grid {
-                display: grid;
+                display: grid !important;
                 grid-template-columns: 1fr 1fr; /* 2 columns layout */
                 gap: 15px;
             }
 
             .print-column {
-                display: flex;
+                display: flex !important;
                 flex-direction: column;
                 gap: 8px;
             }
 
-            .print-row-container { break-inside: avoid; }
-            
-            .print-seat {
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+                break-inside: avoid;
+            }
+
+            .print-table td {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
                 border: 1px solid #ccc !important;
                 height: 55px;
+                width: 6.25%; /* 100% / 16 columns */
                 padding: 1px;
                 text-align: center;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                border-radius: 4px;
+                vertical-align: middle;
             }
             
             .print-seat-num { font-size: 8px; font-weight: bold; }
             .print-seat-name { font-size: 7px; line-height: 1.1; }
             .print-seat-left { font-size: 6px; font-weight: bold; color: #ef4444; }
-
-            .print-grid-container {
-                display: grid !important;
-                grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
-                gap: 2px !important;
-            }
         }
     </style>
 </head>
@@ -191,6 +187,7 @@
 
         // --- Constants & State ---
         const dormColors = { 'လှ': 'bg-sky-100', 'သိမ်': 'bg-teal-100', 'ပညာ': 'bg-indigo-100', 'အဘိ': 'bg-purple-100', 'ရ': 'bg-rose-100', 'ဋ': 'bg-fuchsia-100', 'ပ': 'bg-pink-100', 'ဓံ': 'bg-lime-100', 'သာ': 'bg-emerald-100', 'ဓရ': 'bg-cyan-100', 'ဝိ': 'bg-orange-100', 'ရွှေ': 'bg-amber-100', 'မံ': 'bg-slate-200', 'လှိုင်': 'bg-green-100', 'ကြည်': 'bg-violet-100', 'default': 'bg-gray-200' };
+        const TailwindColorsHex = { 'bg-sky-100': '#e0f2fe', 'bg-teal-100': '#ccfbf1', 'bg-indigo-100': '#e0e7ff', 'bg-purple-100': '#f3e8ff', 'bg-rose-100': '#ffe4e6', 'bg-fuchsia-100': '#fae8ff', 'bg-pink-100': '#fce7f3', 'bg-lime-100': '#ecfccb', 'bg-emerald-100': '#d1fae5', 'bg-cyan-100': '#cffafe', 'bg-orange-100': '#ffedd5', 'bg-amber-100': '#fef3c7', 'bg-slate-200': '#e2e8f0', 'bg-green-100': '#dcfce7', 'bg-violet-100': '#ede9fe', 'bg-gray-200': '#e5e7eb' };
         let studentDataByClass = {};
         let allStudents = [];
 
@@ -220,7 +217,7 @@
         addRowButton.addEventListener('click', () => { const newStudent = { Class: '', Seat: '', Name: '', School: '', Left: 'false' }; const newIndex = adminTableBody.rows.length; const row = createAdminTableRow(newStudent, newIndex); adminTableBody.appendChild(row); });
         downloadCsvButton.addEventListener('click', () => { const headers = ['Class', 'Seat', 'Name', 'School', 'Left']; let csvContent = headers.join(',') + '\n'; const rows = Array.from(adminTableBody.rows); rows.forEach(row => { const classVal = row.querySelector('[data-field="Class"]').value; const seatVal = row.querySelector('[data-field="Seat"]').value; const nameVal = row.querySelector('[data-field="Name"]').value; const schoolVal = row.querySelector('[data-field="School"]').value; const leftVal = row.querySelector('[data-field="Left"]').checked; if (nameVal || classVal || seatVal) { csvContent += `"${classVal}","${seatVal}","${nameVal}","${schoolVal}","${leftVal}"\n`; } }); const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); const url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", "students_updated.csv"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link); setTimeout(() => { alert("CSV ဖိုင်ကို ဒေါင်းလုဒ်လုပ်ပြီးပါပြီ။ စာမျက်နှာကို အသစ်ပြန်လည်စတင်ပါမည်။"); closeAdminPanel(); loadStudentData(); }, 500); });
 
-        // --- Print Handling Logic ---
+        // --- FINAL Print Handling Logic using Tables ---
         function handlePrint() {
             printContainer.innerHTML = ''; // Clear previous print content
             const printGrid = document.createElement('div');
@@ -237,47 +234,51 @@
                 columnDiv.className = 'print-column';
                 classKeys.forEach(classNum => {
                     const classData = studentDataByClass[classNum];
-                    const rowContainer = document.createElement('div');
-                    rowContainer.className = 'print-row-container';
-                    rowContainer.innerHTML = `<div style="font-weight: bold; margin-bottom: 4px; font-size: 10px;">အတန်း - ${classNum}</div>`;
+                    const table = document.createElement('table');
+                    table.className = 'print-table';
                     
-                    const rowGrid = document.createElement('div');
-                    rowGrid.className = 'print-grid-container';
+                    const title = document.createElement('caption');
+                    title.textContent = `အတန်း - ${classNum}`;
+                    title.style.fontWeight = 'bold';
+                    title.style.fontSize = '10px';
+                    title.style.textAlign = 'left';
+                    title.style.marginBottom = '4px';
+                    table.appendChild(title);
+
+                    const tbody = document.createElement('tbody');
+                    const tr = document.createElement('tr');
 
                     const seatKeys = Object.keys(classData).map(Number).sort((a, b) => a - b);
                     const maxSeats = seatKeys.length > 0 ? Math.max(...seatKeys) : 16;
 
-                    for (let seatNum = 1; seatNum <= maxSeats; seatNum++) {
+                    for (let seatNum = 1; seatNum <= 16; seatNum++) {
+                        const td = document.createElement('td');
                         const student = classData[seatNum];
-                        const seatElement = document.createElement('div');
                         let seatHTML = '';
-                        const colorClass = student ? (dormColors[student.School] || dormColors.default) : 'bg-gray-200';
-                        seatElement.className = `print-seat`;
-                        seatElement.style.backgroundColor = colorClass.startsWith('bg-') ? TailwindColors[colorClass] : '#f3f4f6';
-
+                        
                         if (student && student.Name) {
+                            const colorClass = dormColors[student.School] || dormColors.default;
+                            td.style.backgroundColor = TailwindColorsHex[colorClass] || '#e5e7eb';
                             const studentInfo = student.School ? `${student.Name}(${student.School})` : student.Name;
                             seatHTML = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${studentInfo}</div>`;
                             if (student.isLeft) {
-                                seatElement.style.backgroundColor = '#e5e7eb'; // Gray for left students
+                                td.style.backgroundColor = '#e5e7eb'; // Gray for left students
                                 seatHTML += `<div class="print-seat-left">ကျောင်းထွက်</div>`;
                             }
                         } else {
-                            seatElement.style.backgroundColor = '#f3f4f6'; // Empty seat color
+                            td.style.backgroundColor = '#f3f4f6'; // Empty seat color
                             seatHTML = `<div class="print-seat-num" style="color: #9ca3af;">${seatNum}</div>`;
                         }
-                        seatElement.innerHTML = seatHTML;
-                        rowGrid.appendChild(seatElement);
+                        td.innerHTML = seatHTML;
+                        tr.appendChild(td);
                     }
-                    rowContainer.appendChild(rowGrid);
-                    columnDiv.appendChild(rowContainer);
+                    tbody.appendChild(tr);
+                    table.appendChild(tbody);
+                    columnDiv.appendChild(table);
                 });
                 return columnDiv;
             };
             
-            // Simplified Tailwind color map for JS
-            const TailwindColors = { 'bg-sky-100': '#e0f2fe', 'bg-teal-100': '#ccfbf1', 'bg-indigo-100': '#e0e7ff', 'bg-purple-100': '#f3e8ff', 'bg-rose-100': '#ffe4e6', 'bg-fuchsia-100': '#fae8ff', 'bg-pink-100': '#fce7f3', 'bg-lime-100': '#ecfccb', 'bg-emerald-100': '#d1fae5', 'bg-cyan-100': '#cffafe', 'bg-orange-100': '#ffedd5', 'bg-amber-100': '#fef3c7', 'bg-slate-200': '#e2e8f0', 'bg-green-100': '#dcfce7', 'bg-violet-100': '#ede9fe', 'bg-gray-200': '#e5e7eb' };
-
             printGrid.appendChild(createColumn(column1Classes));
             printGrid.appendChild(createColumn(column2Classes));
             printContainer.appendChild(printGrid);
@@ -287,19 +288,4 @@
 
         // --- Event Listeners (Corrected) ---
         adminPanelButton.addEventListener('click', () => { const password = prompt("Admin Password ကိုထည့်ပါ:"); if (password === "Ashin@135") { openAdminPanel(); } else if (password !== null) { alert("Password မှားယွင်းနေပါသည်။"); } });
-        closeAdminModalButton.addEventListener('click', closeAdminPanel);
-        resetButton.addEventListener('click', resetAllSeats);
-        copyAbsentButton.addEventListener('click', () => copyList('absent', copyAbsentButton));
-        copyLeaveButton.addEventListener('click', () => copyList('on-leave', copyLeaveButton));
-        printButton.addEventListener('click', handlePrint); // Use the new print handler
-
-        // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadStudentData();
-            const todayDate = getBurmeseDate();
-            currentDateAbsentEl.textContent = todayDate;
-            currentDateLeaveEl.textContent = todayDate;
-        });
-    </script>
-</body>
-</html>
+        closeAdminModal
