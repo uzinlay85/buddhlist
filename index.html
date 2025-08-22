@@ -38,11 +38,8 @@
         /* --- CSS for Printing --- */
         @media print {
             /* Hide elements that are not needed for printing */
-            body {
-                padding: 0;
-                margin: 0;
-            }
-            #admin-panel-button, #reset-button, #print-button, .lists-section, #seat-tooltip, #admin-modal {
+            body { padding: 0; margin: 0; }
+            #admin-panel-button, #reset-button, #print-button, .lists-section, #seat-tooltip, #admin-modal, .seating-section > .bg-blue-600 {
                 display: none !important;
             }
             
@@ -59,30 +56,39 @@
             .seating-chart-container {
                 overflow: visible;
                 border: none;
+                /* Use Flexbox to arrange class rows side-by-side */
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                align-items: flex-start;
+                gap: 1rem; /* Gap between class rows */
+            }
+
+            .row-container {
+                page-break-inside: avoid;
+                width: 100%; /* Each class row takes full width within the flex container */
             }
 
             /* Force colors to print */
             .seat {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                border: 1px solid #ccc !important; /* Add a light border for clarity */
+                border: 1px solid #ccc !important;
                 box-shadow: none !important;
                 transform: none !important;
+                /* Adjust size for compact printing */
+                height: 65px; 
+                padding: 2px;
             }
+            
+            .seat .font-bold { font-size: 9px; }
+            .seat .leading-tight { font-size: 8px; line-height: 1.1; }
+            .seat .text-\[9px\] { font-size: 7px; }
 
             /* Ensure grid is consistent for printing */
             .grid-container {
                 grid-template-columns: repeat(16, minmax(0, 1fr)) !important;
-                gap: 4px !important;
-                page-break-inside: avoid;
-            }
-            
-            .row-container {
-                page-break-inside: avoid;
-            }
-
-            .seat {
-                height: 80px; /* Adjust height for better print layout */
+                gap: 2px !important;
             }
         }
     </style>
