@@ -24,58 +24,53 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- CSS for Printing --- */
+        /* --- MODIFIED: CSS for Printing --- */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 10mm 5mm 10mm 5mm;
+                margin: 1cm; /* Add some margin */
             }
-            /* Hide everything on the page by default when printing */
-            body > * { display: none !important; }
+            /* Hide main content and buttons when printing */
+            body > #main-content {
+                display: none !important;
+            }
             /* Only show the generated print container */
-            #print-container, #print-container * {
+            #print-container {
                 display: block !important;
             }
-
-            #print-container {
-                width: 100%;
-                height: auto;
-                overflow: hidden;
+            /* Use CSS columns to arrange class tables */
+            .print-grid-wrapper {
+                column-count: 3; /* Arrange classes into 3 columns */
+                column-gap: 8mm;
             }
-            
-            .print-grid {
-                display: grid !important;
-                grid-template-columns: 1fr; /* Single column for all classes */
-                gap: 3mm;
+            .print-class-wrapper {
+                break-inside: avoid; /* CRUCIAL: Prevents a class table from splitting across columns */
+                page-break-inside: avoid;
+                margin-bottom: 5mm; /* Space between tables vertically */
             }
-
-            .print-column {
-                display: flex !important;
-                flex-direction: column;
-                gap: 2mm;
+            .print-class-title {
+                font-size: 10pt;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 1mm;
             }
-
             .print-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 2mm;
             }
-
             .print-table td {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                border: 1px solid #ccc !important;
-                height: 6mm; /* Reduced height */
-                width: 6.25%; /* 100% / 16 columns */
+                border: 0.5px solid #333;
+                height: 10mm;
+                width: 12.5%; /* 8 cells per row */
                 padding: 0.5mm;
                 text-align: center;
                 vertical-align: middle;
-                font-size: 4pt; /* Smaller font */
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
-            
-            .print-seat-num { font-size: 4pt; font-weight: bold; }
-            .print-seat-name { font-size: 3pt; line-height: 1.0; }
-            .print-seat-left { font-size: 3pt; font-weight: bold; color: #ef4444; }
+            .print-seat-num { font-size: 6pt; font-weight: bold; }
+            .print-seat-name { font-size: 5pt; line-height: 1.1; word-wrap: break-word; }
+            .print-seat-left { background-color: #e5e7eb !important; }
         }
     </style>
 </head>
@@ -107,7 +102,7 @@
 
             <div class="flex flex-col lg:flex-row gap-8">
                 <div class="flex-grow seating-section">
-                    <div class="bg-blue-600 text-white text-center py-2 rounded-t-lg font-bold shadow-md">စာချဆရာတော်များနှင့် ကျမ်းပြီးသံဃာ်များ</div>
+                    <div class="bg-blue-600 text-white text-center py-2 rounded-t-lg font-bold shadow-md">စာချဆရာတော်များနှင့် ကျမ်းပြီးသံဃာများ</div>
                     <div id="seating-chart-container" class="p-2 sm:p-4 bg-gray-50 border rounded-b-lg overflow-x-auto"></div>
                     <div class="mt-4 flex justify-center">
                         <button id="reset-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
@@ -189,6 +184,7 @@
 
         // --- Constants & State ---
         const dormColors = { 'လှ': 'bg-sky-100', 'သိမ်': 'bg-teal-100', 'ပညာ': 'bg-indigo-100', 'အဘိ': 'bg-purple-100', 'ရ': 'bg-rose-100', 'ဋ': 'bg-fuchsia-100', 'ပ': 'bg-pink-100', 'ဓံ': 'bg-lime-100', 'သာ': 'bg-emerald-100', 'ဓရ': 'bg-cyan-100', 'ဝိ': 'bg-orange-100', 'ရွှေ': 'bg-amber-100', 'မံ': 'bg-slate-200', 'လှိုင်': 'bg-green-100', 'ကြည်': 'bg-violet-100', 'default': 'bg-gray-200' };
+        // ADDED: Hex color mapping for printing, as Tailwind classes don't work in print styles
         const TailwindColorsHex = { 'bg-sky-100': '#e0f2fe', 'bg-teal-100': '#ccfbf1', 'bg-indigo-100': '#e0e7ff', 'bg-purple-100': '#f3e8ff', 'bg-rose-100': '#ffe4e6', 'bg-fuchsia-100': '#fae8ff', 'bg-pink-100': '#fce7f3', 'bg-lime-100': '#f7fee7', 'bg-emerald-100': '#d1fae5', 'bg-cyan-100': '#cffafe', 'bg-orange-100': '#ffedd5', 'bg-amber-100': '#fef3c7', 'bg-slate-200': '#e2e8f0', 'bg-green-100': '#dcfce7', 'bg-violet-100': '#ede9fe', 'bg-gray-200': '#e5e7eb' };
         let studentDataByClass = {};
         let allStudents = [];
@@ -441,28 +437,85 @@
             return row; 
         }
 
-        // --- Print Handling Logic using Tables ---
+        // --- MODIFIED: Print Handling Logic ---
         function handlePrint() {
-            printContainer.innerHTML = '';
+            printContainer.innerHTML = ''; // Clear previous content
+
             const dateString = getBurmeseDate();
             const title = document.createElement('h1');
             title.textContent = `ဘုရားဝတ်တက် ဇယားကွက် (${dateString})`;
             title.style.textAlign = 'center';
-            title.style.fontSize = '12pt';
+            title.style.fontSize = '14pt';
             title.style.fontWeight = 'bold';
-            title.style.marginBottom = '5mm';
+            title.style.marginBottom = '8mm';
             printContainer.appendChild(title);
 
-            const printGrid = document.createElement('div');
-            printGrid.className = 'print-grid';
+            const gridWrapper = document.createElement('div');
+            gridWrapper.className = 'print-grid-wrapper';
 
             const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
-            
-            // All classes in one column
-            printGrid.appendChild(createColumn(sortedClasses));
 
-            printContainer.appendChild(printGrid);
+            for (const classNum of sortedClasses) {
+                const classData = studentDataByClass[classNum];
+                const seatNumbersInClass = Object.keys(classData).map(Number);
+                const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 0;
 
+                if (maxSeatsInThisRow === 0) continue;
+
+                const classWrapper = document.createElement('div');
+                classWrapper.className = 'print-class-wrapper';
+
+                const classTitle = document.createElement('div');
+                classTitle.className = 'print-class-title';
+                classTitle.textContent = `အတန်း - ${classNum}`;
+                classWrapper.appendChild(classTitle);
+
+                const table = document.createElement('table');
+                table.className = 'print-table';
+                const tbody = document.createElement('tbody');
+
+                // Create a 2x8 grid for each class table to make it compact
+                const numRows = 2;
+                const numCols = Math.ceil(maxSeatsInThisRow / numRows);
+
+                for (let i = 0; i < numRows; i++) {
+                    const tr = document.createElement('tr');
+                    for (let j = 1; j <= numCols; j++) {
+                        const seatNum = i * numCols + j;
+                        
+                        if (seatNum > maxSeatsInThisRow) {
+                            const td = document.createElement('td');
+                            td.style.border = 'none'; // Make extra cells invisible
+                            tr.appendChild(td);
+                            continue;
+                        }
+
+                        const student = classData[seatNum];
+                        const td = document.createElement('td');
+
+                        if (student) {
+                            const colorClass = dormColors[student.School] || dormColors['default'];
+                            td.style.backgroundColor = TailwindColorsHex[colorClass] || '#ffffff';
+                            let content = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${student.Name}</div>`;
+                            if (student.isLeft) {
+                               td.classList.add('print-seat-left');
+                            }
+                            td.innerHTML = content;
+                        } else {
+                            td.innerHTML = `<div class="print-seat-num">${seatNum}</div>`;
+                            td.style.backgroundColor = '#f3f4f6';
+                        }
+                        tr.appendChild(td);
+                    }
+                    tbody.appendChild(tr);
+                }
+
+                table.appendChild(tbody);
+                classWrapper.appendChild(table);
+                gridWrapper.appendChild(classWrapper);
+            }
+
+            printContainer.appendChild(gridWrapper);
             window.print();
         }
 
