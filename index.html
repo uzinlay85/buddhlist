@@ -24,7 +24,7 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- MODIFIED: CSS for Printing --- */
+        /* --- CSS for Printing --- */
         @media print {
             @page {
                 size: A4 landscape;
@@ -85,10 +85,13 @@
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800">ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား</h1>
                 <p class="text-gray-600 mt-1 px-2">ခုံများကို နှိပ်၍ တက်ရောက်မှု အခြေအနေ ပြောင်းလဲနိုင်ပါသည်။</p>
                 <p class="text-xs text-gray-500 mt-2">( ပထမကလစ် = ခွင့်ရှိသူ | ဒုတိယကလစ် = ပျက်ကွက် | တတိယကလစ် = တက်ရောက် )</p>
-                <!-- Print Button -->
-                <div class="mt-4">
+                <!-- Action Buttons -->
+                <div class="mt-4 flex justify-center gap-4">
                     <button id="print-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">
-                        🖨️ ဇယားကွက်ကို Print/PDF ထုတ်ရန်
+                        🖨️ Print/PDF ထုတ်ရန်
+                    </button>
+                    <button id="copy-excel-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">
+                        📋 Excel အတွက် Copy ကူးရန်
                     </button>
                 </div>
             </header>
@@ -160,6 +163,7 @@
         const seatingChartContainer = document.getElementById('seating-chart-container');
         const printContainer = document.getElementById('print-container');
         const printButton = document.getElementById('print-button');
+        const copyExcelButton = document.getElementById('copy-excel-button'); // New button reference
         const absentList = document.getElementById('absent-list');
         const onLeaveList = document.getElementById('on-leave-list');
         const resetButton = document.getElementById('reset-button');
@@ -429,7 +433,7 @@
             return row; 
         }
 
-        // --- Print Handling Logic ---
+        // --- Print & Copy Logic ---
         function handlePrint() {
             printContainer.innerHTML = ''; 
 
@@ -488,6 +492,41 @@
             window.print();
         }
 
+        // NEW FUNCTION: Copy data for Excel
+        function copyForExcel() {
+            const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
+            let excelString = 'အတန်း\t' + Array.from({length: 16}, (_, i) => i + 1).join('\t') + '\n';
+
+            for (const classNum of sortedClasses) {
+                const classData = studentDataByClass[classNum];
+                let rowString = `${classNum}\t`;
+                for (let seatNum = 1; seatNum <= 16; seatNum++) {
+                    const student = classData[seatNum];
+                    if (student) {
+                        let cellContent = `${student.Name} (${student.School})`;
+                        if (student.isLeft) {
+                            cellContent += " (ကျောင်းထွက်)";
+                        }
+                        rowString += `${cellContent}\t`;
+                    } else {
+                        rowString += '\t';
+                    }
+                }
+                excelString += rowString.trimEnd() + '\n';
+            }
+
+            navigator.clipboard.writeText(excelString).then(() => {
+                const originalText = copyExcelButton.textContent;
+                copyExcelButton.textContent = 'ကူးယူပြီးပါပြီ!';
+                setTimeout(() => {
+                    copyExcelButton.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy for Excel: ', err);
+                alert('Excel အတွက် Copy ကူးယူရာတွင် အမှားအယွင်းဖြစ်ပွားပါသည်။');
+            });
+        }
+
         // --- Event Listeners ---
         adminPanelButton.addEventListener('click', () => { 
             const password = prompt("Admin Password ကိုထည့်ပါ:"); 
@@ -537,6 +576,7 @@
         copyAbsentButton.addEventListener('click', () => copyList('absent', copyAbsentButton));
         copyLeaveButton.addEventListener('click', () => copyList('on-leave', copyLeaveButton));
         printButton.addEventListener('click', handlePrint);
+        copyExcelButton.addEventListener('click', copyForExcel); // New event listener
 
         // --- Initial Load ---
         loadStudentData();
