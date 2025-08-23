@@ -28,7 +28,7 @@
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 0.5cm;
+                margin: 0.4cm; /* Margin further reduced */
             }
             body > #main-content {
                 display: none !important;
@@ -49,20 +49,20 @@
                 print-color-adjust: exact !important;
             }
             .print-table th {
-                font-size: 8pt;
+                font-size: 8.5pt; /* Header font size increased */
                 font-weight: bold;
                 background-color: #f3f4f6;
             }
             .print-table td {
-                height: 10mm;
+                height: 9.8mm; /* Height adjusted */
             }
             .class-header-cell {
                 font-weight: bold;
-                font-size: 9pt;
+                font-size: 9.5pt; /* Font size increased */
                 background-color: #e5e7eb;
             }
             .print-seat-num { font-size: 6pt; font-weight: bold; display: block; }
-            .print-seat-name { font-size: 5.5pt; line-height: 1.1; word-wrap: break-word; }
+            .print-seat-name { font-size: 6pt; /* Font size increased */ line-height: 1.1; word-wrap: break-word; }
             .print-seat-left { background-color: #e5e7eb !important; }
         }
     </style>
@@ -429,7 +429,7 @@
             return row; 
         }
 
-        // --- MODIFIED: Print Handling Logic ---
+        // --- Print Handling Logic ---
         function handlePrint() {
             printContainer.innerHTML = ''; 
 
@@ -439,7 +439,7 @@
             title.style.textAlign = 'center';
             title.style.fontSize = '14pt';
             title.style.fontWeight = 'bold';
-            title.style.marginBottom = '5mm'; // Reduced margin
+            title.style.marginBottom = '5mm'; 
             printContainer.appendChild(title);
 
             const table = document.createElement('table');
@@ -461,10 +461,8 @@
                 const classData = studentDataByClass[classNum];
                 const tr = document.createElement('tr');
                 
-                // Class number cell
                 tr.innerHTML = `<td class="class-header-cell">${classNum}</td>`;
 
-                // Seat cells
                 for (let seatNum = 1; seatNum <= 16; seatNum++) {
                     const student = classData[seatNum];
                     const td = document.createElement('td');
