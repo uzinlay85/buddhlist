@@ -24,29 +24,26 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- MODIFIED: CSS for Printing --- */
+        /* --- CSS for Printing --- */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 1cm; /* Add some margin */
+                margin: 1cm;
             }
-            /* Hide main content and buttons when printing */
             body > #main-content {
                 display: none !important;
             }
-            /* Only show the generated print container */
             #print-container {
                 display: block !important;
             }
-            /* Use CSS columns to arrange class tables */
             .print-grid-wrapper {
-                column-count: 3; /* Arrange classes into 3 columns */
+                column-count: 3;
                 column-gap: 8mm;
             }
             .print-class-wrapper {
-                break-inside: avoid; /* CRUCIAL: Prevents a class table from splitting across columns */
+                break-inside: avoid;
                 page-break-inside: avoid;
-                margin-bottom: 5mm; /* Space between tables vertically */
+                margin-bottom: 5mm;
             }
             .print-class-title {
                 font-size: 10pt;
@@ -61,7 +58,7 @@
             .print-table td {
                 border: 0.5px solid #333;
                 height: 10mm;
-                width: 12.5%; /* 8 cells per row */
+                width: 12.5%;
                 padding: 0.5mm;
                 text-align: center;
                 vertical-align: middle;
@@ -184,7 +181,6 @@
 
         // --- Constants & State ---
         const dormColors = { 'လှ': 'bg-sky-100', 'သိမ်': 'bg-teal-100', 'ပညာ': 'bg-indigo-100', 'အဘိ': 'bg-purple-100', 'ရ': 'bg-rose-100', 'ဋ': 'bg-fuchsia-100', 'ပ': 'bg-pink-100', 'ဓံ': 'bg-lime-100', 'သာ': 'bg-emerald-100', 'ဓရ': 'bg-cyan-100', 'ဝိ': 'bg-orange-100', 'ရွှေ': 'bg-amber-100', 'မံ': 'bg-slate-200', 'လှိုင်': 'bg-green-100', 'ကြည်': 'bg-violet-100', 'default': 'bg-gray-200' };
-        // ADDED: Hex color mapping for printing, as Tailwind classes don't work in print styles
         const TailwindColorsHex = { 'bg-sky-100': '#e0f2fe', 'bg-teal-100': '#ccfbf1', 'bg-indigo-100': '#e0e7ff', 'bg-purple-100': '#f3e8ff', 'bg-rose-100': '#ffe4e6', 'bg-fuchsia-100': '#fae8ff', 'bg-pink-100': '#fce7f3', 'bg-lime-100': '#f7fee7', 'bg-emerald-100': '#d1fae5', 'bg-cyan-100': '#cffafe', 'bg-orange-100': '#ffedd5', 'bg-amber-100': '#fef3c7', 'bg-slate-200': '#e2e8f0', 'bg-green-100': '#dcfce7', 'bg-violet-100': '#ede9fe', 'bg-gray-200': '#e5e7eb' };
         let studentDataByClass = {};
         let allStudents = [];
@@ -437,9 +433,9 @@
             return row; 
         }
 
-        // --- MODIFIED: Print Handling Logic ---
+        // --- Print Handling Logic ---
         function handlePrint() {
-            printContainer.innerHTML = ''; // Clear previous content
+            printContainer.innerHTML = ''; 
 
             const dateString = getBurmeseDate();
             const title = document.createElement('h1');
@@ -474,7 +470,6 @@
                 table.className = 'print-table';
                 const tbody = document.createElement('tbody');
 
-                // Create a 2x8 grid for each class table to make it compact
                 const numRows = 2;
                 const numCols = Math.ceil(maxSeatsInThisRow / numRows);
 
@@ -485,7 +480,7 @@
                         
                         if (seatNum > maxSeatsInThisRow) {
                             const td = document.createElement('td');
-                            td.style.border = 'none'; // Make extra cells invisible
+                            td.style.border = 'none';
                             tr.appendChild(td);
                             continue;
                         }
@@ -496,7 +491,8 @@
                         if (student) {
                             const colorClass = dormColors[student.School] || dormColors['default'];
                             td.style.backgroundColor = TailwindColorsHex[colorClass] || '#ffffff';
-                            let content = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${student.Name}</div>`;
+                            // MODIFIED: Added school name in parentheses to the print output
+                            let content = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${student.Name} (${student.School})</div>`;
                             if (student.isLeft) {
                                td.classList.add('print-seat-left');
                             }
