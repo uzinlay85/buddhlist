@@ -24,11 +24,11 @@
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- CSS for Printing --- */
+        /* --- MODIFIED: CSS for Printing --- */
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 1cm;
+                margin: 0.5cm; /* Margin reduced */
             }
             body > #main-content {
                 display: none !important;
@@ -38,18 +38,18 @@
             }
             .print-grid-wrapper {
                 column-count: 3;
-                column-gap: 8mm;
+                column-gap: 7mm; /* Slightly reduced gap */
             }
             .print-class-wrapper {
                 break-inside: avoid;
                 page-break-inside: avoid;
-                margin-bottom: 5mm;
+                margin-bottom: 4mm; /* Slightly reduced margin */
             }
             .print-class-title {
-                font-size: 10pt;
+                font-size: 11pt; /* Font size increased */
                 font-weight: bold;
                 text-align: center;
-                margin-bottom: 1mm;
+                margin-bottom: 1.5mm;
             }
             .print-table {
                 width: 100%;
@@ -57,7 +57,7 @@
             }
             .print-table td {
                 border: 0.5px solid #333;
-                height: 10mm;
+                height: 11mm; /* Height increased slightly */
                 width: 12.5%;
                 padding: 0.5mm;
                 text-align: center;
@@ -65,8 +65,8 @@
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            .print-seat-num { font-size: 6pt; font-weight: bold; }
-            .print-seat-name { font-size: 5pt; line-height: 1.1; word-wrap: break-word; }
+            .print-seat-num { font-size: 7pt; /* Font size increased */ font-weight: bold; }
+            .print-seat-name { font-size: 6pt; /* Font size increased */ line-height: 1.1; word-wrap: break-word; }
             .print-seat-left { background-color: #e5e7eb !important; }
         }
     </style>
