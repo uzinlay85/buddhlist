@@ -28,7 +28,7 @@
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 0.5cm; /* Margin reduced */
+                margin: 0.5cm;
             }
             body > #main-content {
                 display: none !important;
@@ -36,37 +36,33 @@
             #print-container {
                 display: block !important;
             }
-            .print-grid-wrapper {
-                column-count: 3;
-                column-gap: 7mm; /* Slightly reduced gap */
-            }
-            .print-class-wrapper {
-                break-inside: avoid;
-                page-break-inside: avoid;
-                margin-bottom: 4mm; /* Slightly reduced margin */
-            }
-            .print-class-title {
-                font-size: 11pt; /* Font size increased */
-                font-weight: bold;
-                text-align: center;
-                margin-bottom: 1.5mm;
-            }
             .print-table {
                 width: 100%;
                 border-collapse: collapse;
             }
-            .print-table td {
+            .print-table th, .print-table td {
                 border: 0.5px solid #333;
-                height: 11mm; /* Height increased slightly */
-                width: 12.5%;
                 padding: 0.5mm;
                 text-align: center;
                 vertical-align: middle;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            .print-seat-num { font-size: 7pt; /* Font size increased */ font-weight: bold; }
-            .print-seat-name { font-size: 6pt; /* Font size increased */ line-height: 1.1; word-wrap: break-word; }
+            .print-table th {
+                font-size: 8pt;
+                font-weight: bold;
+                background-color: #f3f4f6;
+            }
+            .print-table td {
+                height: 10mm;
+            }
+            .class-header-cell {
+                font-weight: bold;
+                font-size: 9pt;
+                background-color: #e5e7eb;
+            }
+            .print-seat-num { font-size: 6pt; font-weight: bold; display: block; }
+            .print-seat-name { font-size: 5.5pt; line-height: 1.1; word-wrap: break-word; }
             .print-seat-left { background-color: #e5e7eb !important; }
         }
     </style>
@@ -433,7 +429,7 @@
             return row; 
         }
 
-        // --- Print Handling Logic ---
+        // --- MODIFIED: Print Handling Logic ---
         function handlePrint() {
             printContainer.innerHTML = ''; 
 
@@ -443,76 +439,54 @@
             title.style.textAlign = 'center';
             title.style.fontSize = '14pt';
             title.style.fontWeight = 'bold';
-            title.style.marginBottom = '8mm';
+            title.style.marginBottom = '5mm'; // Reduced margin
             printContainer.appendChild(title);
 
-            const gridWrapper = document.createElement('div');
-            gridWrapper.className = 'print-grid-wrapper';
+            const table = document.createElement('table');
+            table.className = 'print-table';
+            
+            const thead = document.createElement('thead');
+            let headerRow = '<tr><th>အတန်း</th>';
+            for(let i = 1; i <= 16; i++) {
+                headerRow += `<th>${i}</th>`;
+            }
+            headerRow += '</tr>';
+            thead.innerHTML = headerRow;
+            table.appendChild(thead);
 
+            const tbody = document.createElement('tbody');
             const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
 
             for (const classNum of sortedClasses) {
                 const classData = studentDataByClass[classNum];
-                const seatNumbersInClass = Object.keys(classData).map(Number);
-                const maxSeatsInThisRow = seatNumbersInClass.length > 0 ? Math.max(...seatNumbersInClass) : 0;
+                const tr = document.createElement('tr');
+                
+                // Class number cell
+                tr.innerHTML = `<td class="class-header-cell">${classNum}</td>`;
 
-                if (maxSeatsInThisRow === 0) continue;
-
-                const classWrapper = document.createElement('div');
-                classWrapper.className = 'print-class-wrapper';
-
-                const classTitle = document.createElement('div');
-                classTitle.className = 'print-class-title';
-                classTitle.textContent = `အတန်း - ${classNum}`;
-                classWrapper.appendChild(classTitle);
-
-                const table = document.createElement('table');
-                table.className = 'print-table';
-                const tbody = document.createElement('tbody');
-
-                const numRows = 2;
-                const numCols = Math.ceil(maxSeatsInThisRow / numRows);
-
-                for (let i = 0; i < numRows; i++) {
-                    const tr = document.createElement('tr');
-                    for (let j = 1; j <= numCols; j++) {
-                        const seatNum = i * numCols + j;
-                        
-                        if (seatNum > maxSeatsInThisRow) {
-                            const td = document.createElement('td');
-                            td.style.border = 'none';
-                            tr.appendChild(td);
-                            continue;
+                // Seat cells
+                for (let seatNum = 1; seatNum <= 16; seatNum++) {
+                    const student = classData[seatNum];
+                    const td = document.createElement('td');
+                    if (student) {
+                        const colorClass = dormColors[student.School] || dormColors['default'];
+                        td.style.backgroundColor = TailwindColorsHex[colorClass] || '#ffffff';
+                        let content = `<div class="print-seat-name">${student.Name} (${student.School})</div>`;
+                        if (student.isLeft) {
+                           td.classList.add('print-seat-left');
+                           content += `<div style="font-size: 4pt; color: #dc2626; font-weight: bold;">ကျောင်းထွက်</div>`;
                         }
-
-                        const student = classData[seatNum];
-                        const td = document.createElement('td');
-
-                        if (student) {
-                            const colorClass = dormColors[student.School] || dormColors['default'];
-                            td.style.backgroundColor = TailwindColorsHex[colorClass] || '#ffffff';
-                            let content = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${student.Name} (${student.School})</div>`;
-                            if (student.isLeft) {
-                               td.classList.add('print-seat-left');
-                               // MODIFIED: Added "ကျောင်းထွက်" text for left students in print view
-                               content += `<div style="font-size: 4pt; color: #dc2626; font-weight: bold;">ကျောင်းထွက်</div>`;
-                            }
-                            td.innerHTML = content;
-                        } else {
-                            td.innerHTML = `<div class="print-seat-num">${seatNum}</div>`;
-                            td.style.backgroundColor = '#f3f4f6';
-                        }
-                        tr.appendChild(td);
+                        td.innerHTML = content;
+                    } else {
+                        td.style.backgroundColor = '#f3f4f6';
                     }
-                    tbody.appendChild(tr);
+                    tr.appendChild(td);
                 }
-
-                table.appendChild(tbody);
-                classWrapper.appendChild(table);
-                gridWrapper.appendChild(classWrapper);
+                tbody.appendChild(tr);
             }
 
-            printContainer.appendChild(gridWrapper);
+            table.appendChild(tbody);
+            printContainer.appendChild(table);
             window.print();
         }
 
