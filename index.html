@@ -491,10 +491,11 @@
                         if (student) {
                             const colorClass = dormColors[student.School] || dormColors['default'];
                             td.style.backgroundColor = TailwindColorsHex[colorClass] || '#ffffff';
-                            // MODIFIED: Added school name in parentheses to the print output
                             let content = `<div class="print-seat-num">${seatNum}</div><div class="print-seat-name">${student.Name} (${student.School})</div>`;
                             if (student.isLeft) {
                                td.classList.add('print-seat-left');
+                               // MODIFIED: Added "ကျောင်းထွက်" text for left students in print view
+                               content += `<div style="font-size: 4pt; color: #dc2626; font-weight: bold;">ကျောင်းထွက်</div>`;
                             }
                             td.innerHTML = content;
                         } else {
