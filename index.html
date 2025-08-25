@@ -558,6 +558,62 @@
                 alert('Excel အတွက် Copy ကူးယူရာတွင် အမှားအယွင်းဖြစ်ပွားပါသည်။');
             });
         }
+        
+        // --- Search Logic ---
+        function handleSearch(event) {
+            const searchTerm = event.target.value.trim();
+            searchResults.innerHTML = '';
+
+            if (searchTerm.length === 0) {
+                searchResults.classList.remove('show');
+                return;
+            }
+
+            const matches = allStudents.filter(student => 
+                student.Name && student.Name.includes(searchTerm) && student.Left !== 'true'
+            );
+
+            if (matches.length > 0) {
+                matches.forEach(student => {
+                    const item = document.createElement('div');
+                    item.className = 'search-result-item';
+                    item.innerHTML = `
+                        <div class="font-bold">${student.Name} (${student.School})</div>
+                        <div class="text-sm text-gray-600">အတန်း ${student.Class}၊ ခုံ ${student.Seat}</div>
+                    `;
+                    item.addEventListener('click', () => {
+                        handleSearchResultClick(student.Class, student.Seat);
+                    });
+                    searchResults.appendChild(item);
+                });
+                searchResults.classList.add('show');
+            } else {
+                searchResults.innerHTML = '<div class="p-4 text-center text-gray-500">ကျောင်းသား မတွေ့ပါ</div>';
+                searchResults.classList.add('show');
+            }
+        }
+
+        function handleSearchResultClick(classNum, seatNum) {
+            const seatElement = document.querySelector(`.seat[data-class-num="${classNum}"][data-seat-num="${seatNum}"]`);
+            
+            if (seatElement) {
+                document.querySelectorAll('.seat.searched').forEach(el => el.classList.remove('searched'));
+
+                seatElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                seatElement.classList.add('searched');
+                setTimeout(() => {
+                    seatElement.classList.remove('searched');
+                }, 2500);
+
+                const clickEvent = new MouseEvent('click', { bubbles: true, cancelable: true, clientX: event.clientX, clientY: event.clientY });
+                seatElement.dispatchEvent(clickEvent);
+            }
+
+            searchInput.value = '';
+            searchResults.classList.remove('show');
+        }
+
 
         // --- Event Listeners ---
         adminPanelButton.addEventListener('click', () => { 
@@ -610,16 +666,23 @@
         copySickTravelButton.addEventListener('click', () => copyList('sick-travel', copySickTravelButton));
         printButton.addEventListener('click', handlePrint);
         copyExcelButton.addEventListener('click', copyForExcel); 
+        searchInput.addEventListener('input', handleSearch);
         
         // Context menu item listeners
         document.querySelectorAll('.context-menu-item').forEach(item => {
             item.addEventListener('click', (e) => {
+                e.stopPropagation();
                 setStatus(e.currentTarget.dataset.status);
             });
         });
         // Hide context menu when clicking elsewhere
-        window.addEventListener('click', () => {
-            contextMenu.classList.remove('show');
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('.seat')) {
+                contextMenu.classList.remove('show');
+            }
+            if (!e.target.closest('.relative')) {
+                searchResults.classList.remove('show');
+            }
         });
 
         // --- Initial Load ---
