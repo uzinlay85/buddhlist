@@ -19,9 +19,13 @@
         .seat.sick-travel { border: 3px solid #3b82f6 !important; transform: scale(1.05); box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
         .seat.empty { background-color: #f3f4f6; border: 1px dashed #d1d5db; }
         .seat.left { background-color: #e5e7eb !important; color: #6b7280 !important; border-color: #d1d5db !important; cursor: not-allowed !important; }
+        .seat.searched {
+            box-shadow: 0 0 15px 5px #facc15; /* yellow-400 */
+            transition: box-shadow 0.3s ease-in-out;
+        }
         
-        #admin-modal, #context-menu { display: none; }
-        #admin-modal.show, #context-menu.show { display: block; }
+        #admin-modal, #context-menu, #search-results { display: none; }
+        #admin-modal.show, #context-menu.show, #search-results.show { display: block; }
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
@@ -43,6 +47,31 @@
         .context-menu-item:hover {
             background-color: #f3f4f6;
         }
+        
+        #search-results {
+            position: absolute;
+            z-index: 1000;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-top: 0.5rem;
+        }
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .search-result-item:hover {
+            background-color: #f9fafb;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
 
         @media print {
             @page { size: A4 landscape; margin: 0.4cm; }
@@ -69,7 +98,14 @@
         <div class="max-w-screen-2xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6 main-container">
             <header class="text-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800">ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား</h1>
-                <p class="text-gray-600 mt-1 px-2">ခုံများကို တစ်ချက်နှိပ်၍ တက်ရောက်မှု အခြေအနေ ရွေးချယ်နိုင်ပါသည်။</p>
+                
+                <!-- Search Bar -->
+                <div class="mt-4 max-w-lg mx-auto relative">
+                    <input type="text" id="search-input" placeholder="ကျောင်းသားအမည်ဖြင့် ရှာရန်..." class="w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="search-results"></div>
+                </div>
+
+                <p class="text-gray-600 mt-4 px-2">ခုံများကို တစ်ချက်နှိပ်၍ တက်ရောက်မှု အခြေအနေ ရွေးချယ်နိုင်ပါသည်။</p>
                 <div class="mt-4 flex flex-wrap justify-center gap-4">
                     <button id="print-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">🖨️ Print/PDF ထုတ်ရန်</button>
                     <button id="copy-excel-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">📋 Excel အတွက် Copy ကူးရန်</button>
@@ -173,6 +209,8 @@
         const addRowButton = document.getElementById('add-row-button');
         const downloadCsvButton = document.getElementById('download-csv-button');
         const contextMenu = document.getElementById('context-menu');
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
 
         // --- Constants & State ---
         const dormColors = { 'လှ': 'bg-sky-100', 'သိမ်': 'bg-teal-100', 'ပညာ': 'bg-indigo-100', 'အဘိ': 'bg-purple-100', 'ရ': 'bg-rose-100', 'ဋ': 'bg-fuchsia-100', 'ပ': 'bg-pink-100', 'ဓံ': 'bg-lime-100', 'သာ': 'bg-emerald-100', 'ဓရ': 'bg-cyan-100', 'ဝိ': 'bg-orange-100', 'ရွှေ': 'bg-amber-100', 'မံ': 'bg-slate-200', 'လှိုင်': 'bg-green-100', 'ကြည်': 'bg-violet-100', 'default': 'bg-gray-200' };
