@@ -28,7 +28,7 @@
         #context-menu {
             position: absolute;
             z-index: 1000;
-            width: 150px;
+            width: 160px; /* Increased width for new text */
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -69,7 +69,7 @@
         <div class="max-w-screen-2xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6 main-container">
             <header class="text-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800">ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား</h1>
-                <p class="text-gray-600 mt-1 px-2">ခုံများကို Right-click နှိပ်၍ တက်ရောက်မှု အခြေအနေ ပြောင်းလဲနိုင်ပါသည်။</p>
+                <p class="text-gray-600 mt-1 px-2">ခုံများကို တစ်ချက်နှိပ်၍ တက်ရောက်မှု အခြေအနေ ရွေးချယ်နိုင်ပါသည်။</p>
                 <div class="mt-4 flex flex-wrap justify-center gap-4">
                     <button id="print-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">🖨️ Print/PDF ထုတ်ရန်</button>
                     <button id="copy-excel-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">📋 Excel အတွက် Copy ကူးရန်</button>
@@ -88,7 +88,7 @@
                 <div class="lg:w-1/3 xl:w-1/4 flex-shrink-0 space-y-6 mt-8 lg:mt-0 lists-section">
                     <div class="bg-white p-4 rounded-lg shadow-md border list-container">
                         <div class="flex justify-between items-start mb-4 border-b pb-2">
-                            <div><h2 class="text-xl font-bold text-yellow-700">ခွင့်ရှိသူစာရင်း</h2><p id="current-date-leave" class="text-sm text-gray-500"></p></div>
+                            <div><h2 class="text-xl font-bold text-yellow-700">ကျောင်းစောင့်စာရင်း</h2><p id="current-date-leave" class="text-sm text-gray-500"></p></div>
                             <button id="copy-leave-button" class="bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md">ကူးယူရန်</button>
                         </div>
                         <ul id="on-leave-list" class="space-y-2 text-gray-700"></ul>
@@ -115,7 +115,7 @@
         
         <div id="context-menu">
             <div class="context-menu-item" data-status="present">✔️ တက်ရောက်</div>
-            <div class="context-menu-item" data-status="on-leave">🟡 ခွင့်ရှိသူ</div>
+            <div class="context-menu-item" data-status="on-leave">🟡 ကျောင်းစောင့်</div>
             <div class="context-menu-item" data-status="sick-travel">🔵 နေမကောင်း/ခရီးသွား</div>
             <div class="context-menu-item" data-status="absent">🔴 ပျက်ကွက်</div>
         </div>
@@ -268,7 +268,10 @@
                             seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`; 
                         } else { 
                             seatElement.classList.add('cursor-pointer', 'hover:scale-105'); 
-                            seatElement.addEventListener('contextmenu', showContextMenu);
+                            seatElement.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                showContextMenu(e);
+                            });
                             seatElement.addEventListener('mouseover', showTooltip); 
                             seatElement.addEventListener('mouseout', hideTooltip); 
                             seatElement.addEventListener('mousemove', moveTooltip); 
@@ -286,10 +289,9 @@
 
         // --- Context Menu & Attendance Logic ---
         function showContextMenu(event) {
-            event.preventDefault();
             currentSeatForMenu = event.currentTarget;
-            contextMenu.style.top = `${event.clientY}px`;
-            contextMenu.style.left = `${event.clientX}px`;
+            contextMenu.style.top = `${event.pageY + 5}px`;
+            contextMenu.style.left = `${event.pageX + 5}px`;
             contextMenu.classList.add('show');
         }
         function setStatus(status) {
@@ -310,7 +312,7 @@
         }
         function updateList(state, listElement, buttonElement) { 
             listElement.innerHTML = ''; 
-            const stateMessages = { 'absent': 'ပျက်ကွက်သူ မရှိပါ။', 'on-leave': 'ခွင့်ရှိသူ မရှိပါ။', 'sick-travel': 'နေမကောင်း/ခရီးသွား မရှိပါ။' }; 
+            const stateMessages = { 'absent': 'ပျက်ကွက်သူ မရှိပါ။', 'on-leave': 'ကျောင်းစောင့် မရှိပါ။', 'sick-travel': 'နေမကောင်း/ခရီးသွား မရှိပါ။' }; 
             const itemColors = { 'absent': 'bg-red-50 text-red-800', 'on-leave': 'bg-yellow-50 text-yellow-800', 'sick-travel': 'bg-blue-50 text-blue-800' }; 
             const seats = document.querySelectorAll(`.seat.${state}`); 
             if (seats.length === 0) { 
@@ -370,7 +372,7 @@
             const listItems = document.getElementById(`${state}-list`).querySelectorAll('li');
             if (listItems.length === 0 || (listItems.length === 1 && listItems[0].classList.contains('text-gray-500'))) return; 
             const dateString = getBurmeseDate(); 
-            const titleMap = { 'absent': 'ဘုရားဝတ်တက် ပျက်ကွက်စာရင်း', 'on-leave': 'ဘုရားဝတ်တက် ခွင့်ရှိသူစာရင်း', 'sick-travel': 'ဘုရားဝတ်တက် နေမကောင်း/ခရီးသွား' };
+            const titleMap = { 'absent': 'ဘုရားဝတ်တက် ပျက်ကွက်စာရင်း', 'on-leave': 'ဘုရားဝတ်တက် ကျောင်းစောင့်စာရင်း', 'sick-travel': 'ဘုရားဝတ်တက် နေမကောင်း/ခရီးသွား' };
             let listText = `${titleMap[state]}\n(${dateString})\n\n`; 
             listItems.forEach(item => { listText += `${item.textContent}\n`; }); 
             navigator.clipboard.writeText(listText.trim()).then(() => {
