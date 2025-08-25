@@ -9,7 +9,6 @@
     <style>
         body { font-family: 'Pyidaungsu', sans-serif; }
         
-        /* --- Responsive Grid System for Seating Chart --- */
         .grid-container { display: grid; gap: 0.5rem; grid-template-columns: repeat(16, minmax(0, 1fr)); }
         @media (max-width: 1024px) { .grid-container { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
         @media (max-width: 640px) { .grid-container { grid-template-columns: repeat(4, minmax(0, 1fr)); } .seat .font-bold { font-size: 0.875rem; } .seat .leading-tight { font-size: 11px; } }
@@ -17,82 +16,63 @@
         #seat-tooltip { pointer-events: none; white-space: pre-wrap; transition: opacity 0.2s; }
         .seat.absent { border: 3px solid #ef4444 !important; transform: scale(1.05); box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
         .seat.on-leave { border: 3px solid #eab308 !important; transform: scale(1.05); box-shadow: 0 0 8px rgba(234, 179, 8, 0.5); }
+        .seat.sick-travel { border: 3px solid #3b82f6 !important; transform: scale(1.05); box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
         .seat.empty { background-color: #f3f4f6; border: 1px dashed #d1d5db; }
         .seat.left { background-color: #e5e7eb !important; color: #6b7280 !important; border-color: #d1d5db !important; cursor: not-allowed !important; }
-        #admin-modal { display: none; }
-        #admin-modal.show { display: flex; }
+        
+        #admin-modal, #context-menu { display: none; }
+        #admin-modal.show, #context-menu.show { display: block; }
         .modal-content { max-height: 80vh; }
         .table-input { border: 1px solid #d1d5db; border-radius: 4px; padding: 4px 8px; width: 100%; }
 
-        /* --- CSS for Printing --- */
+        #context-menu {
+            position: absolute;
+            z-index: 1000;
+            width: 150px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 0.5rem;
+        }
+        .context-menu-item {
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .context-menu-item:hover {
+            background-color: #f3f4f6;
+        }
+
         @media print {
-            @page {
-                size: A4 landscape;
-                margin: 0.4cm; /* Margin further reduced */
-            }
-            body > #main-content {
-                display: none !important;
-            }
-            #print-container {
-                display: block !important;
-            }
-            .print-table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            .print-table th, .print-table td {
-                border: 0.5px solid #333;
-                padding: 0.5mm;
-                text-align: center;
-                vertical-align: middle;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .print-table th {
-                font-size: 8.5pt; /* Header font size increased */
-                font-weight: bold;
-                background-color: #f3f4f6;
-            }
-            .print-table td {
-                height: 9.8mm; /* Height adjusted */
-            }
-            .class-header-cell {
-                font-weight: bold;
-                font-size: 9.5pt; /* Font size increased */
-                background-color: #e5e7eb;
-            }
-            .print-seat-num { font-size: 6pt; font-weight: bold; display: block; }
-            .print-seat-name { font-size: 6pt; /* Font size increased */ line-height: 1.1; word-wrap: break-word; }
+            @page { size: A4 landscape; margin: 0.4cm; }
+            body > #main-content { display: none !important; }
+            #print-container { display: block !important; }
+            .print-table { width: 100%; border-collapse: collapse; }
+            .print-table th, .print-table td { border: 0.5px solid #333; padding: 0.5mm; text-align: center; vertical-align: middle; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .print-table th { font-size: 8.5pt; font-weight: bold; background-color: #f3f4f6; }
+            .print-table td { height: 9.8mm; }
+            .class-header-cell { font-weight: bold; font-size: 9.5pt; background-color: #e5e7eb; }
+            .print-seat-name { font-size: 6pt; line-height: 1.1; word-wrap: break-word; }
             .print-seat-left { background-color: #e5e7eb !important; }
         }
     </style>
 </head>
 <body class="bg-gray-100 p-2 sm:p-6 md:p-8">
-    <!-- This div is hidden by default and will be used for printing -->
     <div id="print-container"></div>
 
-    <!-- Main content wrapper -->
     <div id="main-content">
-        <!-- Admin Panel Button -->
         <div id="admin-panel-button" class="fixed top-4 right-4 z-50">
-            <button class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-700 transition">
-                Admin Panel
-            </button>
+            <button class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-gray-700 transition">Admin Panel</button>
         </div>
 
         <div class="max-w-screen-2xl mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-6 main-container">
             <header class="text-center mb-6">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-800">ဘုရားဝတ်တက် စစ်ဆေးရေးဇယား</h1>
-                <p class="text-gray-600 mt-1 px-2">ခုံများကို နှိပ်၍ တက်ရောက်မှု အခြေအနေ ပြောင်းလဲနိုင်ပါသည်။</p>
-                <p class="text-xs text-gray-500 mt-2">( ပထမကလစ် = ခွင့်ရှိသူ | ဒုတိယကလစ် = ပျက်ကွက် | တတိယကလစ် = တက်ရောက် )</p>
-                <!-- Action Buttons -->
-                <div class="mt-4 flex justify-center gap-4">
-                    <button id="print-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">
-                        🖨️ Print/PDF ထုတ်ရန်
-                    </button>
-                    <button id="copy-excel-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">
-                        📋 Excel အတွက် Copy ကူးရန်
-                    </button>
+                <p class="text-gray-600 mt-1 px-2">ခုံများကို Right-click နှိပ်၍ တက်ရောက်မှု အခြေအနေ ပြောင်းလဲနိုင်ပါသည်။</p>
+                <div class="mt-4 flex flex-wrap justify-center gap-4">
+                    <button id="print-button" class="bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">🖨️ Print/PDF ထုတ်ရန်</button>
+                    <button id="copy-excel-button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">📋 Excel အတွက် Copy ကူးရန်</button>
                 </div>
             </header>
 
@@ -101,20 +81,11 @@
                     <div class="bg-blue-600 text-white text-center py-2 rounded-t-lg font-bold shadow-md">စာချဆရာတော်များနှင့် ကျမ်းပြီးသံဃာများ</div>
                     <div id="seating-chart-container" class="p-2 sm:p-4 bg-gray-50 border rounded-b-lg overflow-x-auto"></div>
                     <div class="mt-4 flex justify-center">
-                        <button id="reset-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
-                            အားလုံးကို ပြန်မှတ်သတ်မှတ်ရန်
-                        </button>
+                        <button id="reset-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg shadow-md">အားလုံးကို ပြန်မှတ်သတ်မှတ်ရန်</button>
                     </div>
                 </div>
 
                 <div class="lg:w-1/3 xl:w-1/4 flex-shrink-0 space-y-6 mt-8 lg:mt-0 lists-section">
-                    <div class="bg-white p-4 rounded-lg shadow-md border list-container">
-                        <div class="flex justify-between items-start mb-4 border-b pb-2">
-                            <div><h2 class="text-xl font-bold text-red-700">ပျက်ကွက်စာရင်း</h2><p id="current-date-absent" class="text-sm text-gray-500"></p></div>
-                            <button id="copy-absent-button" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md">ကူးယူရန်</button>
-                        </div>
-                        <ul id="absent-list" class="space-y-2 text-gray-700"></ul>
-                    </div>
                     <div class="bg-white p-4 rounded-lg shadow-md border list-container">
                         <div class="flex justify-between items-start mb-4 border-b pb-2">
                             <div><h2 class="text-xl font-bold text-yellow-700">ခွင့်ရှိသူစာရင်း</h2><p id="current-date-leave" class="text-sm text-gray-500"></p></div>
@@ -122,13 +93,33 @@
                         </div>
                         <ul id="on-leave-list" class="space-y-2 text-gray-700"></ul>
                     </div>
+                     <div class="bg-white p-4 rounded-lg shadow-md border list-container">
+                        <div class="flex justify-between items-start mb-4 border-b pb-2">
+                            <div><h2 class="text-xl font-bold text-blue-700">နေမကောင်း/ခရီးသွား</h2><p id="current-date-sick-travel" class="text-sm text-gray-500"></p></div>
+                            <button id="copy-sick-travel-button" class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md">ကူးယူရန်</button>
+                        </div>
+                        <ul id="sick-travel-list" class="space-y-2 text-gray-700"></ul>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-md border list-container">
+                        <div class="flex justify-between items-start mb-4 border-b pb-2">
+                            <div><h2 class="text-xl font-bold text-red-700">ပျက်ကွက်စာရင်း</h2><p id="current-date-absent" class="text-sm text-gray-500"></p></div>
+                            <button id="copy-absent-button" class="bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-1 px-3 rounded-lg shadow-md">ကူးယူရန်</button>
+                        </div>
+                        <ul id="absent-list" class="space-y-2 text-gray-700"></ul>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="seat-tooltip" class="hidden absolute p-2 bg-gray-900 text-white text-sm rounded-md shadow-lg z-50"></div>
+        
+        <div id="context-menu">
+            <div class="context-menu-item" data-status="present">✔️ တက်ရောက်</div>
+            <div class="context-menu-item" data-status="on-leave">🟡 ခွင့်ရှိသူ</div>
+            <div class="context-menu-item" data-status="sick-travel">🔵 နေမကောင်း/ခရီးသွား</div>
+            <div class="context-menu-item" data-status="absent">🔴 ပျက်ကွက်</div>
+        </div>
 
-        <!-- Admin Modal -->
         <div id="admin-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-40">
             <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl modal-content overflow-auto">
                 <h2 class="text-2xl font-bold mb-4">ကျောင်းသားစာရင်း ပြင်ဆင်ရန်</h2>
@@ -163,27 +154,32 @@
         const seatingChartContainer = document.getElementById('seating-chart-container');
         const printContainer = document.getElementById('print-container');
         const printButton = document.getElementById('print-button');
-        const copyExcelButton = document.getElementById('copy-excel-button'); // New button reference
+        const copyExcelButton = document.getElementById('copy-excel-button');
         const absentList = document.getElementById('absent-list');
         const onLeaveList = document.getElementById('on-leave-list');
+        const sickTravelList = document.getElementById('sick-travel-list');
         const resetButton = document.getElementById('reset-button');
         const copyAbsentButton = document.getElementById('copy-absent-button');
         const copyLeaveButton = document.getElementById('copy-leave-button');
+        const copySickTravelButton = document.getElementById('copy-sick-travel-button');
         const tooltip = document.getElementById('seat-tooltip');
         const currentDateAbsentEl = document.getElementById('current-date-absent');
         const currentDateLeaveEl = document.getElementById('current-date-leave');
+        const currentDateSickTravelEl = document.getElementById('current-date-sick-travel');
         const adminPanelButton = document.getElementById('admin-panel-button').querySelector('button');
         const adminModal = document.getElementById('admin-modal');
         const closeAdminModalButton = document.getElementById('close-admin-modal');
         const adminTableBody = document.getElementById('admin-table-body');
         const addRowButton = document.getElementById('add-row-button');
         const downloadCsvButton = document.getElementById('download-csv-button');
+        const contextMenu = document.getElementById('context-menu');
 
         // --- Constants & State ---
         const dormColors = { 'လှ': 'bg-sky-100', 'သိမ်': 'bg-teal-100', 'ပညာ': 'bg-indigo-100', 'အဘိ': 'bg-purple-100', 'ရ': 'bg-rose-100', 'ဋ': 'bg-fuchsia-100', 'ပ': 'bg-pink-100', 'ဓံ': 'bg-lime-100', 'သာ': 'bg-emerald-100', 'ဓရ': 'bg-cyan-100', 'ဝိ': 'bg-orange-100', 'ရွှေ': 'bg-amber-100', 'မံ': 'bg-slate-200', 'လှိုင်': 'bg-green-100', 'ကြည်': 'bg-violet-100', 'default': 'bg-gray-200' };
         const TailwindColorsHex = { 'bg-sky-100': '#e0f2fe', 'bg-teal-100': '#ccfbf1', 'bg-indigo-100': '#e0e7ff', 'bg-purple-100': '#f3e8ff', 'bg-rose-100': '#ffe4e6', 'bg-fuchsia-100': '#fae8ff', 'bg-pink-100': '#fce7f3', 'bg-lime-100': '#f7fee7', 'bg-emerald-100': '#d1fae5', 'bg-cyan-100': '#cffafe', 'bg-orange-100': '#ffedd5', 'bg-amber-100': '#fef3c7', 'bg-slate-200': '#e2e8f0', 'bg-green-100': '#dcfce7', 'bg-violet-100': '#ede9fe', 'bg-gray-200': '#e5e7eb' };
         let studentDataByClass = {};
         let allStudents = [];
+        let currentSeatForMenu = null;
         const attendanceStorageKey = 'monkAttendanceState';
 
         // --- Data Loading & Parsing ---
@@ -272,7 +268,7 @@
                             seatElement.innerHTML += `<span class="text-[9px] font-bold text-red-600 mt-1">ကျောင်းထွက်</span>`; 
                         } else { 
                             seatElement.classList.add('cursor-pointer', 'hover:scale-105'); 
-                            seatElement.addEventListener('click', cycleAttendanceState); 
+                            seatElement.addEventListener('contextmenu', showContextMenu);
                             seatElement.addEventListener('mouseover', showTooltip); 
                             seatElement.addEventListener('mouseout', hideTooltip); 
                             seatElement.addEventListener('mousemove', moveTooltip); 
@@ -288,28 +284,34 @@
             } 
         }
 
-        // --- Attendance & List Management ---
-        function cycleAttendanceState(event) { 
-            const seat = event.currentTarget; 
-            if (seat.classList.contains('on-leave')) { 
-                seat.classList.remove('on-leave'); 
-                seat.classList.add('absent'); 
-            } else if (seat.classList.contains('absent')) { 
-                seat.classList.remove('absent'); 
-            } else { 
-                seat.classList.add('on-leave'); 
-            } 
-            saveAttendanceStates(); 
-            updateAllLists(); 
+        // --- Context Menu & Attendance Logic ---
+        function showContextMenu(event) {
+            event.preventDefault();
+            currentSeatForMenu = event.currentTarget;
+            contextMenu.style.top = `${event.clientY}px`;
+            contextMenu.style.left = `${event.clientX}px`;
+            contextMenu.classList.add('show');
+        }
+        function setStatus(status) {
+            if (!currentSeatForMenu) return;
+            currentSeatForMenu.classList.remove('absent', 'on-leave', 'sick-travel');
+            if (status !== 'present') {
+                currentSeatForMenu.classList.add(status);
+            }
+            saveAttendanceStates();
+            updateAllLists();
+            contextMenu.classList.remove('show');
+            currentSeatForMenu = null;
         }
         function updateAllLists() { 
             updateList('absent', absentList, copyAbsentButton); 
             updateList('on-leave', onLeaveList, copyLeaveButton); 
+            updateList('sick-travel', sickTravelList, copySickTravelButton);
         }
         function updateList(state, listElement, buttonElement) { 
             listElement.innerHTML = ''; 
-            const stateMessages = { 'absent': 'ပျက်ကွက်သူ မရှိပါ။', 'on-leave': 'ခွင့်ရှိသူ မရှိပါ။' }; 
-            const itemColors = { 'absent': 'bg-red-50 text-red-800', 'on-leave': 'bg-yellow-50 text-yellow-800' }; 
+            const stateMessages = { 'absent': 'ပျက်ကွက်သူ မရှိပါ။', 'on-leave': 'ခွင့်ရှိသူ မရှိပါ။', 'sick-travel': 'နေမကောင်း/ခရီးသွား မရှိပါ။' }; 
+            const itemColors = { 'absent': 'bg-red-50 text-red-800', 'on-leave': 'bg-yellow-50 text-yellow-800', 'sick-travel': 'bg-blue-50 text-blue-800' }; 
             const seats = document.querySelectorAll(`.seat.${state}`); 
             if (seats.length === 0) { 
                 listElement.innerHTML = `<li class="text-gray-500">${stateMessages[state]}</li>`; 
@@ -336,7 +338,7 @@
         }
         function resetAllSeats() { 
             if (confirm('အားလုံးကို ပြန်မှတ်သတ်မှတ်မှာ သေချာပါသလား?')) { 
-                document.querySelectorAll('.seat:not(.left)').forEach(seat => seat.classList.remove('absent', 'on-leave')); 
+                document.querySelectorAll('.seat:not(.left)').forEach(seat => seat.classList.remove('absent', 'on-leave', 'sick-travel')); 
                 localStorage.removeItem(attendanceStorageKey); 
                 updateAllLists(); 
             } 
@@ -347,7 +349,8 @@
                 const key = `${seat.dataset.classNum}-${seat.dataset.seatNum}`; 
                 let state = ''; 
                 if (seat.classList.contains('absent')) state = 'absent'; 
-                else if (seat.classList.contains('on-leave')) state = 'on-leave'; 
+                else if (seat.classList.contains('on-leave')) state = 'on-leave';
+                else if (seat.classList.contains('sick-travel')) state = 'sick-travel';
                 if (state) attendance[key] = state; 
             }); 
             localStorage.setItem(attendanceStorageKey, JSON.stringify(attendance)); 
@@ -364,13 +367,14 @@
             } 
         }
         function copyList(state, buttonElement) { 
-            const listItems = state === 'absent' ? absentList.querySelectorAll('li') : onLeaveList.querySelectorAll('li'); 
+            const listItems = document.getElementById(`${state}-list`).querySelectorAll('li');
             if (listItems.length === 0 || (listItems.length === 1 && listItems[0].classList.contains('text-gray-500'))) return; 
             const dateString = getBurmeseDate(); 
-            const title = state === 'absent' ? 'ဘုရားဝတ်တက် ပျက်ကွက်စာရင်း' : 'ဘုရားဝတ်တက် ခွင့်ရှိသူစာရင်း'; 
-            let listText = `${title}\n(${dateString})\n\n`; 
+            const titleMap = { 'absent': 'ဘုရားဝတ်တက် ပျက်ကွက်စာရင်း', 'on-leave': 'ဘုရားဝတ်တက် ခွင့်ရှိသူစာရင်း', 'sick-travel': 'ဘုရားဝတ်တက် နေမကောင်း/ခရီးသွား' };
+            let listText = `${titleMap[state]}\n(${dateString})\n\n`; 
             listItems.forEach(item => { listText += `${item.textContent}\n`; }); 
             navigator.clipboard.writeText(listText.trim()).then(() => {
+                const originalText = buttonElement.textContent;
                 buttonElement.textContent = 'ကူးယူပြီ!';
                 setTimeout(() => buttonElement.textContent = 'ကူးယူရန်', 2000);
             }).catch(err => console.error('Failed to copy: ', err)); 
@@ -436,7 +440,6 @@
         // --- Print & Copy Logic ---
         function handlePrint() {
             printContainer.innerHTML = ''; 
-
             const dateString = getBurmeseDate();
             const title = document.createElement('h1');
             title.textContent = `ဘုရားဝတ်တက် ဇယားကွက် (${dateString})`;
@@ -445,10 +448,8 @@
             title.style.fontWeight = 'bold';
             title.style.marginBottom = '5mm'; 
             printContainer.appendChild(title);
-
             const table = document.createElement('table');
             table.className = 'print-table';
-            
             const thead = document.createElement('thead');
             let headerRow = '<tr><th>အတန်း</th>';
             for(let i = 1; i <= 16; i++) {
@@ -457,16 +458,12 @@
             headerRow += '</tr>';
             thead.innerHTML = headerRow;
             table.appendChild(thead);
-
             const tbody = document.createElement('tbody');
             const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
-
             for (const classNum of sortedClasses) {
                 const classData = studentDataByClass[classNum];
                 const tr = document.createElement('tr');
-                
                 tr.innerHTML = `<td class="class-header-cell">${classNum}</td>`;
-
                 for (let seatNum = 1; seatNum <= 16; seatNum++) {
                     const student = classData[seatNum];
                     const td = document.createElement('td');
@@ -486,17 +483,13 @@
                 }
                 tbody.appendChild(tr);
             }
-
             table.appendChild(tbody);
             printContainer.appendChild(table);
             window.print();
         }
-
-        // NEW FUNCTION: Copy data for Excel
         function copyForExcel() {
             const sortedClasses = Object.keys(studentDataByClass).sort((a, b) => parseInt(a) - parseInt(b));
             let excelString = 'အတန်း\t' + Array.from({length: 16}, (_, i) => i + 1).join('\t') + '\n';
-
             for (const classNum of sortedClasses) {
                 const classData = studentDataByClass[classNum];
                 let rowString = `${classNum}\t`;
@@ -514,7 +507,6 @@
                 }
                 excelString += rowString.trimEnd() + '\n';
             }
-
             navigator.clipboard.writeText(excelString).then(() => {
                 const originalText = copyExcelButton.textContent;
                 copyExcelButton.textContent = 'ကူးယူပြီးပါပြီ!';
@@ -575,14 +567,27 @@
         resetButton.addEventListener('click', resetAllSeats);
         copyAbsentButton.addEventListener('click', () => copyList('absent', copyAbsentButton));
         copyLeaveButton.addEventListener('click', () => copyList('on-leave', copyLeaveButton));
+        copySickTravelButton.addEventListener('click', () => copyList('sick-travel', copySickTravelButton));
         printButton.addEventListener('click', handlePrint);
-        copyExcelButton.addEventListener('click', copyForExcel); // New event listener
+        copyExcelButton.addEventListener('click', copyForExcel); 
+        
+        // Context menu item listeners
+        document.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                setStatus(e.currentTarget.dataset.status);
+            });
+        });
+        // Hide context menu when clicking elsewhere
+        window.addEventListener('click', () => {
+            contextMenu.classList.remove('show');
+        });
 
         // --- Initial Load ---
         loadStudentData();
         const todayDate = getBurmeseDate();
         currentDateAbsentEl.textContent = todayDate;
         currentDateLeaveEl.textContent = todayDate;
+        currentDateSickTravelEl.textContent = todayDate;
     </script>
 </body>
 </html>
